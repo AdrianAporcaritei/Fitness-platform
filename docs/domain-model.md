@@ -1,7 +1,7 @@
-# Domain Model – Fitness Platform (v0.3)
+# Domain Model – Fitness Platform (v0.4)
 
 Identificatorii (tabele, câmpuri) sunt în engleză, descrierile în română.
-**Statut:** v0.3 – actualizat după deciziile din secțiunea 9. Întrebările rămase deschise sunt în secțiunea 10.
+**Statut:** v0.4 – actualizat după deciziile din secțiunea 9 (ultima: #25, produse adăugate de client). Întrebările rămase deschise sunt în secțiunea 10.
 
 ---
 
@@ -161,8 +161,19 @@ Ierarhie: `food` (generic) → `food_product` (produs de marcă) → `barcode`.
 | category | varchar, null | |
 | kcal_100g, protein_100g, carbs_100g, fat_100g | numeric | doar macro |
 | serving_g | numeric, null | |
-| source | varchar | `SYSTEM`, `COACH`, `IMPORT` |
+| source | varchar | `SYSTEM`, `COACH`, `IMPORT`, `CLIENT` |
 | owner_id | uuid, null FK → app_user | null = global |
+| | | CHECK: `source IN ('SYSTEM','IMPORT')` ⇔ `owner_id IS NULL`; `COACH` / `CLIENT` ⇒ `owner_id IS NOT NULL` |
+
+**Produse private ale clientului (`source = CLIENT`, `owner_id` = clientul):**
+- Clientul le adaugă manual (de exemplu când scanarea nu găsește nimic).
+- **Vizibilitate:** doar clientul proprietar și coach-ul lui **curent** (prin `coach_client` activ). La schimbarea coach-ului, accesul trece automat la noul coach.
+- **Drepturi:** doar clientul le creează, editează și șterge. Coach-ul le vede și le poate folosi în planurile acelui client.
+- **Utilizare permisă:** `food_diary_entry` din jurnalul acelui client și `meal_recipe_ingredient` din planurile atribuite acelui client.
+- **Utilizare interzisă:** `recipe_ingredient` (rețetele coach-ului sunt comune mai multor clienți), șabloane (`is_template = true`), planurile altor clienți.
+- **Ștergere:** permisă doar dacă produsul nu e folosit nicăieri (jurnal, planuri); altfel API-ul întoarce o eroare de validare clară. La ștergerea contului se șterg definitiv toate (vezi 8.2).
+- Regulile de mai sus se aplică în service și sunt acoperite de teste.
+- Nu au traduceri (`food_translation` doar pentru conținutul global, vezi 8.1).
 
 ### food_product
 | Câmp | Tip | Note |
@@ -179,14 +190,19 @@ Ierarhie: `food` (generic) → `food_product` (produs de marcă) → `barcode`.
 |---|---|---|
 | id | uuid PK | |
 | food_product_id | uuid FK | |
-| code | varchar, unique | EAN-13 / UPC |
+| owner_id | uuid, null FK → app_user | **denormalizat** din `food.owner_id` (necesar pentru indexurile parțiale); setat și ținut sincron de service, verificat prin teste |
+| code | varchar | EAN-13 / UPC; **nu** e unic global (vezi indexurile) |
 | format | varchar | `EAN13`, `EAN8`, `UPC_A` |
+| | | `UNIQUE (code) WHERE owner_id IS NULL` – unic printre produsele globale (sistem și importate) |
+| | | `UNIQUE (owner_id, code) WHERE owner_id IS NOT NULL` – unic per proprietar pentru produsele private |
+
+Codul de bare este opțional pentru produsele clientului (ex. mâncare gătită acasă).
 
 **Flux de scanare cod de bare:**
-1. Clientul scanează codul → API caută în `barcode`.
-2. Dacă există local → întoarce produsul cu valorile nutriționale.
-3. Dacă nu → interoghează sursa externă (ex. Open Food Facts; verifică licența și condițiile de utilizare), creează `food` + `food_product` + `barcode` cu `source = IMPORT`, apoi întoarce rezultatul.
-4. Dacă nu există nici extern → clientul/coach-ul poate introduce manual produsul.
+1. Clientul scanează codul → API caută întâi printre **produsele private ale clientului** (`barcode.owner_id` = clientul).
+2. Dacă nu → caută printre **produsele globale** (`barcode.owner_id IS NULL`).
+3. Dacă nu → interoghează sursa externă (ex. Open Food Facts; verifică licența și condițiile de utilizare), creează `food` + `food_product` + `barcode` globale cu `source = IMPORT`, apoi întoarce rezultatul. La import concurent al aceluiași cod, cererea care pierde primește conflict pe indexul unic și citește rândul deja creat.
+4. Dacă nu există nici extern → clientul introduce manual produsul (`source = CLIENT`, privat; vezi mai sus).
 
 *Notă:* scanarea cu camera funcționează bine pe aplicația mobilă; pe Flutter web camera e mai limitată, deci pe web se oferă introducere manuală a codului.
 
@@ -506,7 +522,7 @@ Mesajele aparțin relației `coach_client`; dacă relația se încheie și clien
 
 Flux propus:
 1. Clientul cere ștergerea și o confirmă (reintroducere parolă).
-2. Într-o singură tranzacție se șterg: `client_profile`, `medical_info`, `goal`, `progress_measurement`, `progress_photo`, `nutrition_target` + `calculation`, `food_diary` + intrări, planurile atribuite lui (`meal_plan`, `workout_plan` cu tot ce conțin, inclusiv `meal_recipe_ingredient`), `task`, `feedback`, `calendar_event` / `appointment` / `reschedule_request`, `notification`, `coach_client` și `message`, apoi `app_user`. Se implementează cu `ON DELETE CASCADE` unde e sigur și cu ștergere explicită în service, acoperită de teste.
+2. Într-o singură tranzacție se șterg: `client_profile`, `medical_info`, `goal`, `progress_measurement`, `progress_photo`, `nutrition_target` + `calculation`, `food_diary` + intrări, planurile atribuite lui (`meal_plan`, `workout_plan` cu tot ce conțin, inclusiv `meal_recipe_ingredient`), produsele lui private (`food` cu `source = CLIENT` + `food_product` + `barcode`; după jurnal și planuri, care le referă), `task`, `feedback`, `calendar_event` / `appointment` / `reschedule_request`, `notification`, `coach_client` și `message`, apoi `app_user`. Se implementează cu `ON DELETE CASCADE` unde e sigur și cu ștergere explicită în service, acoperită de teste.
 3. Fișierele din storage (pozele de progres) se șterg printr-un job asincron, cu reîncercare dacă eșuează. Până se confirmă ștergerea, cheia rămâne într-o tabelă de ștergeri în așteptare, fără alte date personale.
 4. `audit_log`: rândurile unde utilizatorul este actor sau subiect se **anonimizează** (`actor_user_id` / `subject_user_id` = null, `details` curățat) sau se șterg.
 5. Mesajele din conversația cu coach-ul dispar și la coach.
@@ -541,6 +557,7 @@ Notă: copiile din backup-uri dispar abia la rotația backup-urilor; politica de
 | 22 | Schimbare coach | Fără opțiune dedicată; regula implicită în 10.1 |
 | 23 | Limbi | Română și engleză |
 | 24 | Ștergere cont client | Ștergere completă și definitivă (8.2) |
+| 25 | Produse adăugate de client | `food` privat (`source = CLIENT`, `owner_id` = client), vizibil doar clientului și coach-ului curent, folosit doar în jurnalul și planurile acelui client; cod de bare unic global printre produsele globale și unic per proprietar printre cele private (indexuri parțiale); căutare: client → global → Open Food Facts (§4) |
 
 ### Notă privind datele personale
 Se pornește de la decizia „fără reguli GDPR". Totuși, platforma stochează și așa date cu caracter personal (nume, email, greutate, măsurători corporale, fotografii de progres, mesaje, note despre accidentări), iar dacă utilizatorii sunt în UE, GDPR se aplică indiferent de cât de puține date se colectează. Nu e o problemă de arhitectură, dar pentru un lansament public merită un minim practic: politică de confidențialitate și termeni, acord la înregistrare, posibilitatea ca utilizatorul să-și șteargă contul și să-și exporte datele, acces strict pe roluri, HTTPS și parole hash-uite. Acestea nu schimbă modelul de mai sus (sunt în mare parte funcționalități de cont), dar e bine de știut. Pentru certitudine, consultă un specialist juridic; acesta nu este sfat juridic.
