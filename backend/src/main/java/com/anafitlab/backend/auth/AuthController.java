@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.anafitlab.backend.auth.dto.LoginRequest;
 import com.anafitlab.backend.auth.dto.LogoutRequest;
+import com.anafitlab.backend.auth.dto.PasswordResetConfirmRequest;
+import com.anafitlab.backend.auth.dto.PasswordResetRequest;
 import com.anafitlab.backend.auth.dto.RefreshRequest;
 import com.anafitlab.backend.auth.dto.RegisterCoachRequest;
 import com.anafitlab.backend.auth.dto.TokenResponse;
@@ -67,6 +69,17 @@ class AuthController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void resendVerification(CurrentUser current) {
 		accounts.resendVerification(current);
+	}
+
+	@PostMapping("/auth/password-reset/request")
+	@ResponseStatus(HttpStatus.ACCEPTED)
+	void requestPasswordReset(@Valid @RequestBody PasswordResetRequest request, HttpServletRequest http) {
+		accounts.requestPasswordReset(request.email(), ClientIp.of(http));
+	}
+
+	@PostMapping("/auth/password-reset/confirm")
+	TokenResponse confirmPasswordReset(@Valid @RequestBody PasswordResetConfirmRequest request) {
+		return accounts.confirmPasswordReset(request.token(), request.newPassword());
 	}
 
 }

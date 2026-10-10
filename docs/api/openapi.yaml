@@ -27,6 +27,36 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /me/password:
+    post:
+      operationId: changePassword
+      summary: Change the password of the authenticated user.
+      description: >
+        Revokes every session except the one identified by refreshToken. If refreshToken is not one of the
+        caller's tokens, all sessions are revoked.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed.
+        '400':
+          description: Validation failed (PASSWORD_POLICY, REQUIRED), or INVALID_CURRENT_PASSWORD.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /auth/register/coach:
     post:
       operationId: registerCoach
@@ -221,6 +251,62 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /auth/password-reset/request:
+    post:
+      operationId: requestPasswordReset
+      summary: Request a password reset email.
+      description: >
+        Always 202 with no body, whether or not the email belongs to an account (suspended accounts get no email).
+        Limited to 3 per email and 10 per IP per hour.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '202':
+          description: Accepted.
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Rate limited.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/password-reset/confirm:
+    post:
+      operationId: confirmPasswordReset
+      summary: Set a new password with the token from the reset email.
+      description: >
+        Single-use token valid for 1 hour. Revokes all refresh tokens, verifies a PENDING user (ACTIVE) and
+        returns a new session.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: Password changed; new session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed (PASSWORD_POLICY, REQUIRED), or INVALID_TOKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     bearerAuth:
@@ -246,6 +332,40 @@ components:
       properties:
         token:
           type: string
+    PasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+    PasswordResetConfirmRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword, refreshToken]
+      properties:
+        currentPassword:
+          type: string
+          maxLength: 200
+        newPassword:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+        refreshToken:
+          type: string
+          description: Refresh token of the current session; that session is kept.
     Problem:
       type: object
       required: [type, title, status, code]
