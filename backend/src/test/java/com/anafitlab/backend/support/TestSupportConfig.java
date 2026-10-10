@@ -19,4 +19,10 @@ public class TestSupportConfig {
 		return new MutableClock(START);
 	}
 
+	@Bean
+	@Primary
+	RecordingEmailSender recordingEmailSender() {
+		return new RecordingEmailSender();
+	}
+
 }

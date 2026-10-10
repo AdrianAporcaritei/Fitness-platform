@@ -26,10 +26,14 @@ public abstract class IntegrationTestBase {
 	@Autowired
 	private RateLimiter rateLimiter;
 
+	@Autowired
+	private RecordingEmailSender emailSender;
+
 	@BeforeEach
 	void resetState() {
 		clock.set(TestSupportConfig.START);
 		rateLimiter.reset();
+		emailSender.clear();
 		jdbc.execute("TRUNCATE app_user, coach_profile, coach_client, coach_invite, refresh_token, user_action_token CASCADE");
 	}
 
