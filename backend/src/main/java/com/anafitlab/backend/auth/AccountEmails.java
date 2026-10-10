@@ -37,9 +37,7 @@ public class AccountEmails {
 			throw new IllegalStateException("Account emails must be sent inside a transaction");
 		}
 		Locale locale = Locale.forLanguageTag(user.getLocale());
-		String baseUrl = app.baseUrl().endsWith("/")
-				? app.baseUrl().substring(0, app.baseUrl().length() - 1) : app.baseUrl();
-		String link = baseUrl + pathAndQuery;
+		String link = app.baseUrlWithoutTrailingSlash() + pathAndQuery;
 		String subject = messages.getMessage(key + ".subject", null, locale);
 		String body = messages.getMessage(key + ".body", new Object[] {link, user.getFirstName()}, locale);
 		events.publishEvent(new OutgoingEmail(user.getEmail(), subject, body));

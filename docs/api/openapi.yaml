@@ -319,6 +319,148 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /invites/{code}:
+    get:
+      operationId: previewInvite
+      summary: Public lookup of an invite code (used by the join page).
+      description: >
+        The code is accepted loosely: case-insensitive, dashes and spaces ignored, O read as 0 and I/L as 1.
+        Rate limited per IP (20 per 15 minutes). An invalid code is an error, so a 200 always has valid=true.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The invite is usable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitePreviewResponse'
+        '404':
+          description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: INVITE_USED, INVITE_REVOKED or INVITE_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Too many lookups from this IP (RATE_LIMITED, with Retry-After).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/invites:
+    post:
+      operationId: createInvite
+      summary: Create a single-use invite code (valid 7 days).
+      description: The code is returned only in this response; only its hash is stored. The body is optional.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInviteRequest'
+      responses:
+        '201':
+          description: Invite created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedInviteResponse'
+        '400':
+          description: Validation failed (TOO_LONG).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN), or the coach's email is not verified (EMAIL_NOT_VERIFIED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    get:
+      operationId: listInvites
+      summary: The coach's invites, newest first. Codes are never returned.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Invites with derived status.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InviteResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/invites/{id}/revoke:
+    post:
+      operationId: revokeInvite
+      summary: Revoke a pending invite.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Revoked.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: INVITE_NOT_FOUND (unknown, or belongs to another coach).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: INVITE_NOT_REVOCABLE (used, revoked or expired).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     bearerAuth:
@@ -378,6 +520,63 @@ components:
         refreshToken:
           type: string
           description: Refresh token of the current session; that session is kept.
+    CreateInviteRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          description: Optional note for the coach, such as the prospective client's name.
+    CreatedInviteResponse:
+      type: object
+      required: [id, code, link, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          description: Display form XXXXX-XXXXX (Crockford base32).
+        link:
+          type: string
+          description: "{baseUrl}/join/{code}"
+        label:
+          type: [string, 'null']
+        expiresAt:
+          type: string
+          format: date-time
+    InviteResponse:
+      type: object
+      required: [id, status, createdAt, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: [string, 'null']
+        status:
+          type: string
+          enum: [PENDING, USED, REVOKED, EXPIRED]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        usedAt:
+          type: [string, 'null']
+          format: date-time
+    InvitePreviewResponse:
+      type: object
+      required: [coachFirstName, coachLastName, valid]
+      properties:
+        coachFirstName:
+          type: string
+        coachLastName:
+          type: string
+        valid:
+          type: boolean
+          description: Always true; invalid codes are errors.
     Problem:
       type: object
       required: [type, title, status, code]
