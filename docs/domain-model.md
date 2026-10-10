@@ -1,7 +1,7 @@
-# Domain Model – Fitness Platform (v0.4)
+# Domain Model – Fitness Platform (v0.5)
 
 Identificatorii (tabele, câmpuri) sunt în engleză, descrierile în română.
-**Statut:** v0.4 – actualizat după deciziile din secțiunea 9 (ultima: #25, produse adăugate de client). Întrebările rămase deschise sunt în secțiunea 10.
+**Statut:** v0.5 – actualizat după deciziile din secțiunea 9 (ultima: #31, slice 1: identitate, autentificare, legarea coach–client). Întrebările rămase deschise sunt în secțiunea 10.
 
 ---
 
@@ -33,14 +33,19 @@ Un utilizator are **un singur rol** (`COACH`, `CLIENT` sau `ADMIN`). Un client a
 | Câmp | Tip | Note |
 |---|---|---|
 | id | uuid PK | |
-| email | varchar, unique | |
-| password_hash | varchar | |
-| role | varchar | `COACH`, `CLIENT`, `ADMIN` |
+| email | varchar | stocat cu litere mici: `CHECK (email = lower(email))`, index unic |
+| password_hash | varchar | BCrypt (`DelegatingPasswordEncoder`) |
+| role | varchar | `COACH`, `CLIENT`, `ADMIN` (CHECK) |
 | first_name, last_name | varchar | |
-| locale | varchar | `ro` sau `en` |
-| timezone | varchar | |
-| status | varchar | `PENDING`, `ACTIVE`, `SUSPENDED` |
+| locale | varchar | `ro` sau `en` (CHECK); setat la înregistrare |
+| timezone | varchar | nume IANA, validat în service; setat la înregistrare |
+| status | varchar | `PENDING`, `ACTIVE`, `SUSPENDED` (CHECK) |
 | email_verified_at, last_login_at | timestamptz, null | |
+
+**Semnificația `status`:**
+- `PENDING` – emailul nu este verificat; utilizatorul se poate autentifica (restricțiile: coach-ul `PENDING` nu poate crea invitații; clientul `PENDING` nu are restricții, doar un banner).
+- `ACTIVE` – emailul este verificat.
+- `SUSPENDED` – nu se poate autentifica și nu poate reîmprospăta sesiunea; `refresh_token`-urile sunt revocate. Verificarea emailului unui utilizator `SUSPENDED` setează `email_verified_at`, dar statusul rămâne `SUSPENDED`.
 
 ### coach_profile (1–1 cu app_user, role = COACH)
 | Câmp | Tip | Note |
@@ -55,10 +60,60 @@ Un utilizator are **un singur rol** (`COACH`, `CLIENT` sau `ADMIN`). Un client a
 | id | uuid PK | |
 | coach_id | uuid FK → app_user | |
 | client_id | uuid FK → app_user | |
-| status | varchar | `INVITED`, `ACTIVE`, `PAUSED`, `ENDED` |
-| invited_at, started_at, ended_at | timestamptz | |
+| status | varchar | `ACTIVE`, `PAUSED`, `ENDED` (CHECK); `INVITED` a fost eliminat (decizia #26) |
+| invited_at, started_at, ended_at | timestamptz | `invited_at` = momentul creării invitației folosite; `started_at` se setează la legare; `ended_at` la încheiere |
 
-**Constrângere:** partial unique index pe `client_id` unde `status IN ('INVITED','ACTIVE','PAUSED')` → un client are cel mult o relație curentă. Istoricul (`ENDED`) se păstrează.
+**Constrângeri:**
+- Partial unique index `ON coach_client (client_id) WHERE status IN ('ACTIVE','PAUSED')` → un client are cel mult o relație curentă. Istoricul (`ENDED`) se păstrează.
+- Index pe `coach_id`.
+
+**Tranziții:** `ACTIVE ↔ PAUSED` și `ACTIVE | PAUSED → ENDED`. `ENDED` este final. Orice altă tranziție → `409 INVALID_RELATIONSHIP_TRANSITION`.
+
+**Semnificația `PAUSED`:** relația numără în continuare ca „singurul coach curent" al clientului. Coach-ul păstrează acces **doar pentru citire** la datele clientului, nu poate atribui lucruri noi, iar chatul rămâne deschis.
+
+**Încheierea relației:** coach-ul **sau** clientul poate încheia relația (`ENDED`); doar coach-ul poate pune în pauză / relua (`PAUSED` / `ACTIVE`). După `ENDED`, coach-ul nu mai are niciun acces la datele clientului.
+
+### coach_invite
+Invitație personală, cu un singur cod, prin care un client se înregistrează la un coach (decizia #26).
+| Câmp | Tip | Note |
+|---|---|---|
+| id | uuid PK | |
+| coach_id | uuid FK → app_user | |
+| code_hash | varchar, unique | SHA-256 (hex, litere mici) al codului normalizat |
+| label | varchar(100), null | ex. „Maria P." |
+| status | varchar | `PENDING`, `USED`, `REVOKED` (CHECK) |
+| expires_at | timestamptz | creare + 7 zile |
+| used_at | timestamptz, null | |
+| used_by_client_id | uuid, null FK → app_user | `ON DELETE SET NULL` |
+
+- Cod: 10 caractere Crockford base32 (fără `I`, `L`, `O`, `U`), afișat `XXXXX-XXXXX`; normalizat (majuscule, fără liniuțe și spații) înainte de hash. Link: `{APP_BASE_URL}/join/{code}`.
+- Codul în clar se întoarce o singură dată, la creare; nu se stochează.
+- Expirarea se deduce din `expires_at`: API-ul raportează `EXPIRED` pentru o invitație `PENDING` expirată; valoarea nu se stochează.
+
+### refresh_token
+| Câmp | Tip | Note |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK → app_user | `ON DELETE CASCADE` |
+| token_hash | varchar, unique | SHA-256 |
+| family_id | uuid, index | o familie per autentificare |
+| expires_at | timestamptz | emitere + 30 zile; fiecare rotație emite încă 30 de zile |
+| revoked_at | timestamptz, null | |
+| replaced_by_id | uuid, null FK → refresh_token | |
+
+Reutilizarea unui token deja rotat revocă întreaga familie.
+
+### user_action_token
+| Câmp | Tip | Note |
+|---|---|---|
+| id | uuid PK | |
+| user_id | uuid FK → app_user | `ON DELETE CASCADE` |
+| purpose | varchar | `EMAIL_VERIFICATION` (48 h), `PASSWORD_RESET` (1 h) (CHECK) |
+| token_hash | varchar, unique | SHA-256 |
+| expires_at | timestamptz | |
+| used_at | timestamptz, null | |
+
+Emiterea unui token marchează ca folosite tokenurile anterioare nefolosite ale aceluiași utilizator și scop. Tokenurile (refresh și action) sunt 32 de octeți `SecureRandom`, base64url fără padding.
 
 ---
 
@@ -558,6 +613,12 @@ Notă: copiile din backup-uri dispar abia la rotația backup-urilor; politica de
 | 23 | Limbi | Română și engleză |
 | 24 | Ștergere cont client | Ștergere completă și definitivă (8.2) |
 | 25 | Produse adăugate de client | `food` privat (`source = CLIENT`, `owner_id` = client), vizibil doar clientului și coach-ului curent, folosit doar în jurnalul și planurile acelui client; cod de bare unic global printre produsele globale și unic per proprietar printre cele private (indexuri parțiale); căutare: client → global → Open Food Facts (§4) |
+| 26 | Invitații coach–client | Cod personal, de unică folosință, cu etichetă opțională, expirare 7 zile, revocabil, afișat o singură dată; clientul se înregistrează cu codul și se creează `coach_client` `ACTIVE`; `INVITED` eliminat din `coach_client.status`; un client fără coach se poate lega cu un cod nou (§2) |
+| 27 | Spring Boot 4 | Se păstrează Spring Boot 4.1.1 (Jackson 3, Spring Security 7, springdoc 3.x) |
+| 28 | Sesiuni | JWT de acces propriu (15 min, HS256) + refresh token opac rotativ (30 zile) cu detectarea reutilizării; același API pentru web și mobil |
+| 29 | Verificare email și resetare parolă | Incluse; emailuri text simplu din `MessageSource` (ro/en); Mailpit local, SMTP prin configurare în producție; coach-ul `PENDING` nu poate crea invitații, clientul `PENDING` nu are restricții |
+| 30 | Înregistrare coach deschisă | Oricine se poate înregistra ca coach; devine `ACTIVE` după verificarea emailului; primul ADMIN se creează la pornire din `ADMIN_EMAIL` / `ADMIN_PASSWORD` |
+| 31 | `PAUSED` și încheierea relației | `PAUSED` = încă coach curent, coach-ul are acces doar pentru citire, chatul rămâne deschis; coach-ul sau clientul poate încheia relația, doar coach-ul poate pune în pauză / relua (§2) |
 
 ### Notă privind datele personale
 Se pornește de la decizia „fără reguli GDPR". Totuși, platforma stochează și așa date cu caracter personal (nume, email, greutate, măsurători corporale, fotografii de progres, mesaje, note despre accidentări), iar dacă utilizatorii sunt în UE, GDPR se aplică indiferent de cât de puține date se colectează. Nu e o problemă de arhitectură, dar pentru un lansament public merită un minim practic: politică de confidențialitate și termeni, acord la înregistrare, posibilitatea ca utilizatorul să-și șteargă contul și să-și exporte datele, acces strict pe roluri, HTTPS și parole hash-uite. Acestea nu schimbă modelul de mai sus (sunt în mare parte funcționalități de cont), dar e bine de știut. Pentru certitudine, consultă un specialist juridic; acesta nu este sfat juridic.
@@ -568,7 +629,7 @@ Se pornește de la decizia „fără reguli GDPR". Totuși, platforma stochează
 
 1. **Schimbare de coach (de confirmat):** am interpretat „nu avem nevoie de opțiune" ca *regulă fixă, fără alegere*. Propunerea mea: datele aparțin clientului, deci noul coach vede istoricul lui (profil, măsurători, antrenamente finalizate, jurnal), dar **nu** mesajele dintre client și fostul coach. E în regulă, sau noul coach pornește de la zero?
 2. **Ștergerea contului de coach:** ce se întâmplă cu planurile deja atribuite clienților? Propunere: ștergerea e permisă doar după ce clienții sunt detașați; planurile rămân clientului, cu `coach_id` null.
-3. **Rolul ADMIN:** ce poate face exact? Propunere: gestionare conturi, alimente și exerciții globale, traduceri. Fără acces la datele clienților (poze, măsurători, mesaje).
+3. **Rolul ADMIN:** ce poate face exact? Propunere: gestionare conturi, alimente și exerciții globale, traduceri. Fără acces la datele clienților (poze, măsurători, mesaje). *Slice 1 nu are endpointuri ADMIN* (doar crearea primului ADMIN la pornire, decizia #30); suspendarea / reactivarea se face direct în DB până la slice-ul de administrare.
 4. **Poze de progres:** limite (dimensiune maximă, formate acceptate, număr per client) și regiune de hosting (în UE)?
 5. **Traduceri conținut global:** cine le face la început (seed în ambele limbi pentru alimentele și exercițiile de pornire)?
 

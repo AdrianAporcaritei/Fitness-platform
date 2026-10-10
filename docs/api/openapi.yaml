@@ -1,0 +1,90 @@
+openapi: 3.1.0
+info:
+  title: Ana Fit Lab API
+  version: 0.1.0
+  description: >
+    Hand-written contract; each endpoint is added here before it is implemented.
+    Errors follow RFC 9457 (application/problem+json) with a stable machine-readable `code`.
+servers:
+  - url: /api/v1
+paths: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+          description: Localized from the user's locale, or Accept-Language when unauthenticated.
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+          description: Stable machine-readable error code.
+        errors:
+          type: array
+          description: Present for validation failures.
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+    UserResponse:
+      type: object
+      required: [id, email, role, status, firstName, lastName, locale, timezone]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [COACH, CLIENT, ADMIN]
+        status:
+          type: string
+          enum: [PENDING, ACTIVE, SUSPENDED]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    TokenResponse:
+      type: object
+      required: [accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user]
+      properties:
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserResponse'
