@@ -1,8 +1,10 @@
 package com.anafitlab.backend.security;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -10,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Locale;
 import java.util.UUID;
 
 import javax.crypto.spec.SecretKeySpec;
@@ -35,6 +38,8 @@ import com.anafitlab.backend.support.TestFixtures;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 class JwtSecurityTest extends IntegrationTestBase {
+
+	private static final String TEST_SECRET = "test-only-jwt-secret-0123456789abcdef0123456789abcdef-xxxxxxxxxx";
 
 	@Autowired
 	MockMvc mockMvc;
@@ -89,8 +94,7 @@ class JwtSecurityTest extends IntegrationTestBase {
 	@Test
 	void onlyHs256IsAccepted() throws Exception {
 		AppUser coach = fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
-		String secret = "test-only-jwt-secret-0123456789abcdef0123456789abcdef-xxxxxxxxxx";
-		String token = tokenSignedWith(secret, MacAlgorithm.HS512, coach);
+		String token = tokenSignedWith(TEST_SECRET, MacAlgorithm.HS512, coach);
 		mockMvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
 				.andExpect(status().isUnauthorized());
 	}
@@ -129,7 +133,7 @@ class JwtSecurityTest extends IntegrationTestBase {
 	void detailUsesUserLocale() throws Exception {
 		AppUser client = fixtures.user(Role.CLIENT, UserStatus.ACTIVE, "client@x.test");
 		fixtures.setLocale(client, "ro");
-		String ro = messages.getMessage("error.FORBIDDEN", null, java.util.Locale.forLanguageTag("ro"));
+		String ro = messages.getMessage("error.FORBIDDEN", null, Locale.forLanguageTag("ro"));
 		mockMvc.perform(get("/api/v1/coach/profile").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(client))
 				.header(HttpHeaders.ACCEPT_LANGUAGE, "en"))
 				.andExpect(status().isForbidden())
@@ -137,10 +141,50 @@ class JwtSecurityTest extends IntegrationTestBase {
 	}
 
 	@Test
-	void docsStayPublic() throws Exception {
+	void docsAreOnlyPartlyPublic() throws Exception {
 		mockMvc.perform(get("/openapi.yaml")).andExpect(status().isOk());
-		mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk());
-		mockMvc.perform(get("/swagger-ui/index.html")).andExpect(status().isOk());
+		mockMvc.perform(get("/swagger-ui.html")).andExpect(status().is3xxRedirection());
+		mockMvc.perform(get("/v3/api-docs/swagger-config")).andExpect(status().isOk());
+		mockMvc.perform(get("/v3/api-docs")).andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void tokenWithoutExpiryIsRejected() throws Exception {
+		AppUser coach = fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
+		var key = new SecretKeySpec(TEST_SECRET.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+		JwtClaimsSet claims = JwtClaimsSet.builder().subject(coach.getId().toString()).claim("role", "COACH")
+				.id(UUID.randomUUID().toString()).issuedAt(clock.instant()).build();
+		String token = new NimbusJwtEncoder(new ImmutableSecret<>(key))
+				.encode(JwtEncoderParameters.from(JwsHeader.with(MacAlgorithm.HS256).build(), claims)).getTokenValue();
+		mockMvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void staleBearerDoesNotBreakPublicRoutes() throws Exception {
+		AppUser coach = fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
+		String stale = fixtures.bearer(coach);
+		clock.advance(Duration.ofHours(1));
+		// not implemented yet: reaching the router (404) proves security let the request through
+		mockMvc.perform(post("/api/v1/auth/login").header(HttpHeaders.AUTHORIZATION, stale))
+				.andExpect(status().isNotFound());
+		mockMvc.perform(get("/api/v1/invites/ABC").header(HttpHeaders.AUTHORIZATION, stale))
+				.andExpect(status().isNotFound());
+		mockMvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, stale))
+				.andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void publicRoutesArePublicOnlyForTheirMethod() throws Exception {
+		mockMvc.perform(get("/api/v1/auth/login")).andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void coachOnAdminRouteIs403Problem() throws Exception {
+		AppUser coach = fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
+		mockMvc.perform(get("/api/v1/admin/x").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(coach)))
+				.andExpect(status().isForbidden())
+				.andExpect(jsonPath("$.code").value("FORBIDDEN"));
 	}
 
 	@Test
@@ -149,6 +193,11 @@ class JwtSecurityTest extends IntegrationTestBase {
 				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
 				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS, "authorization"))
 				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://app.test"));
+		mockMvc.perform(get("/api/v1/me").header(HttpHeaders.ORIGIN, "http://app.test"))
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+						containsString("Retry-After")))
+				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS,
+						containsString("WWW-Authenticate")));
 		mockMvc.perform(options("/api/v1/me").header(HttpHeaders.ORIGIN, "http://evil.test")
 				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
 				.andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, nullValue()));

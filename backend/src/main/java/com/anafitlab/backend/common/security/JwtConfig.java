@@ -36,6 +36,7 @@ public class JwtConfig {
 				.macAlgorithm(MacAlgorithm.HS256).build();
 		JwtTimestampValidator timestamps = new JwtTimestampValidator(Duration.ZERO);
 		timestamps.setClock(clock);
+		timestamps.setAllowEmptyExpiryClaim(false);
 		decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(timestamps));
 		return decoder;
 	}

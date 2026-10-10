@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 import com.anafitlab.backend.common.security.JwtConfig;
@@ -29,7 +30,10 @@ class JwtSecretValidationTest {
 
 	@Test
 	void missingSecretFailsStartup() {
-		runner.run(context -> assertThat(context).hasFailed());
+		runner.run(context -> {
+			assertThat(context).hasFailed();
+			assertThat(context.getStartupFailure()).rootCause().hasMessageContaining("app.jwt.secret");
+		});
 	}
 
 	@Test
@@ -44,7 +48,7 @@ class JwtSecretValidationTest {
 		runner.withPropertyValues("app.jwt.secret=" + "a".repeat(32)).run(context -> assertThat(context).hasNotFailed());
 	}
 
-	@org.springframework.context.annotation.Configuration(proxyBeanMethods = false)
+	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties(JwtProperties.class)
 	@Import(JwtConfig.class)
 	static class TestConfig {

@@ -10,9 +10,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.AppUserRepository;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 /**
@@ -24,9 +21,9 @@ public class RequestLocaleResolver {
 
 	private static final List<String> SUPPORTED = List.of("ro", "en");
 
-	private final AppUserRepository users;
+	private final UserLocaleLookup users;
 
-	RequestLocaleResolver(AppUserRepository users) {
+	RequestLocaleResolver(UserLocaleLookup users) {
 		this.users = users;
 	}
 
@@ -40,12 +37,16 @@ public class RequestLocaleResolver {
 		if (!(authentication instanceof JwtAuthenticationToken token)) {
 			return null;
 		}
-		try {
-			UUID id = UUID.fromString(token.getToken().getSubject());
-			return users.findById(id).map(AppUser::getLocale).filter(SUPPORTED::contains)
-					.map(Locale::forLanguageTag).orElse(null);
+		String subject = token.getToken().getSubject();
+		if (subject == null) {
+			return null;
 		}
-		catch (IllegalArgumentException | NullPointerException e) {
+		try {
+			return users.localeOf(UUID.fromString(subject)).filter(SUPPORTED::contains).map(Locale::forLanguageTag)
+					.orElse(null);
+		}
+		catch (RuntimeException e) {
+			// a failing lookup must not turn an error response into a second failure
 			return null;
 		}
 	}

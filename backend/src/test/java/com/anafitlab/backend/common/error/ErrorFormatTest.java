@@ -3,8 +3,6 @@ package com.anafitlab.backend.common.error;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,25 +10,42 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.MessageSource;
-import org.springframework.context.annotation.Import;
+import org.junit.jupiter.api.BeforeEach;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Locale;
 
-import com.anafitlab.backend.TestcontainersConfiguration;
+import com.anafitlab.backend.auth.AppUser;
+import com.anafitlab.backend.auth.Role;
+import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.support.IntegrationTestBase;
+import com.anafitlab.backend.support.TestFixtures;
 
-@Import(TestcontainersConfiguration.class)
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("test")
-@WithMockUser
-class ErrorFormatTest {
+
+class ErrorFormatTest extends IntegrationTestBase {
+
+	@Autowired
+	TestFixtures fixtures;
+
+	private String authorization;
+
+	@BeforeEach
+	void signIn() {
+		authorization = fixtures.bearer(fixtures.user(Role.CLIENT, UserStatus.ACTIVE, "client@x.test"));
+	}
+
+	private MockHttpServletRequestBuilder get(String url) {
+		return MockMvcRequestBuilders.get(url).header(HttpHeaders.AUTHORIZATION, authorization);
+	}
+
+	private MockHttpServletRequestBuilder post(String url) {
+		return MockMvcRequestBuilders.post(url).header(HttpHeaders.AUTHORIZATION, authorization);
+	}
 
 	@Autowired
 	MockMvc mockMvc;
@@ -51,9 +66,14 @@ class ErrorFormatTest {
 	void detailIsLocalizedRomanian() throws Exception {
 		String ro = messages.getMessage("error.EMAIL_TAKEN", null, Locale.forLanguageTag("ro"));
 		String en = messages.getMessage("error.EMAIL_TAKEN", null, Locale.ENGLISH);
-		mockMvc.perform(get("/api/v1/test/api-error").header("Accept-Language", "ro"))
+		AppUser romanian = fixtures.user(Role.CLIENT, UserStatus.ACTIVE, "ro@x.test");
+		fixtures.setLocale(romanian, "ro");
+		// the signed-in user's locale wins over Accept-Language
+		mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/test/api-error")
+				.header(HttpHeaders.AUTHORIZATION, fixtures.bearer(romanian))
+				.header("Accept-Language", "en"))
 				.andExpect(jsonPath("$.detail").value(ro));
-		mockMvc.perform(get("/api/v1/test/api-error").header("Accept-Language", "en"))
+		mockMvc.perform(get("/api/v1/test/api-error").header("Accept-Language", "ro"))
 				.andExpect(jsonPath("$.detail").value(en));
 		assertNotEquals(ro, en);
 	}
