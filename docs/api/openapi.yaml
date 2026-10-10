@@ -57,6 +57,12 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+        '429':
+          description: Too many wrong current passwords (shares the login budget of 5 per email per 15 minutes).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /auth/register/coach:
     post:
       operationId: registerCoach
@@ -303,6 +309,12 @@ paths:
                 $ref: '#/components/schemas/TokenResponse'
         '400':
           description: Validation failed (PASSWORD_POLICY, REQUIRED), or INVALID_TOKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: ACCOUNT_SUSPENDED. Nothing is changed and the token stays usable.
           content:
             application/problem+json:
               schema:

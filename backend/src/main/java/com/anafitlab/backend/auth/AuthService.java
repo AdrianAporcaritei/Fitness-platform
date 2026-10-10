@@ -23,6 +23,9 @@ import com.anafitlab.backend.common.security.CurrentUser;
 @Service
 public class AuthService {
 
+	/** Shared with password change: wrong passwords count against the same per-email budget. */
+	static final String LOGIN_EMAIL_BUCKET = "login-email";
+
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
 	private final UserRegistrar registrar;
@@ -71,13 +74,13 @@ public class AuthService {
 	@Transactional
 	public TokenResponse login(LoginRequest request, String ip) {
 		String email = request.email();
-		rateLimiter.ensureUnder("login-email", email, limits.loginEmail().limit());
+		rateLimiter.ensureUnder(LOGIN_EMAIL_BUCKET, email, limits.loginEmail().limit());
 		rateLimiter.ensureUnder("login-ip", ip, limits.loginIp().limit());
 		AppUser user = users.findByEmail(email).orElse(null);
 		String hash = user != null ? user.getPasswordHash() : dummyHash;
 		boolean matches = passwordEncoder.matches(request.password(), hash);
 		if (user == null || !matches) {
-			rateLimiter.record("login-email", email, limits.loginEmail().limit());
+			rateLimiter.record(LOGIN_EMAIL_BUCKET, email, limits.loginEmail().limit());
 			rateLimiter.record("login-ip", ip, limits.loginIp().limit());
 			throw new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS");
 		}

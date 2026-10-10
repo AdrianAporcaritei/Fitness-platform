@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.Map;
 
@@ -134,6 +136,7 @@ class PasswordResetTest extends IntegrationTestBase {
 		login(EMAIL, TestFixtures.PASSWORD).andExpect(status().isUnauthorized());
 		refresh(r).andExpect(status().isUnauthorized());
 		// the session returned by confirm works and is the only live family besides the new login
+		assertThat(liveFamilies(EMAIL)).isEqualTo(2);
 		refresh(json.readTree(body).get("refreshToken").asString()).andExpect(status().isOk());
 	}
 
@@ -154,7 +157,7 @@ class PasswordResetTest extends IntegrationTestBase {
 		confirm(resetToken(EMAIL), NEW_PASSWORD).andExpect(status().isOk())
 				.andExpect(jsonPath("$.user.status").value("ACTIVE"));
 		assertThat(jdbc.queryForObject("SELECT email_verified_at FROM app_user WHERE email = ?",
-				java.sql.Timestamp.class, EMAIL)).isNotNull();
+				Timestamp.class, EMAIL)).isNotNull();
 		login(EMAIL, NEW_PASSWORD).andExpect(status().isOk()).andExpect(jsonPath("$.user.status").value("ACTIVE"));
 	}
 
@@ -196,6 +199,12 @@ class PasswordResetTest extends IntegrationTestBase {
 		jdbc.update("UPDATE app_user SET status = 'SUSPENDED' WHERE email = ?", EMAIL);
 		confirm(resetToken(EMAIL), NEW_PASSWORD).andExpect(status().isForbidden())
 				.andExpect(jsonPath("$.code").value("ACCOUNT_SUSPENDED"));
+		assertThat(jdbc.queryForObject("""
+				SELECT t.used_at FROM user_action_token t JOIN app_user u ON u.id = t.user_id
+				WHERE u.email = ? AND t.purpose = 'PASSWORD_RESET'""", Timestamp.class, EMAIL)).isNull();
+		// old password still current: login gets past the credential check and hits the suspended check
+		login(EMAIL, TestFixtures.PASSWORD).andExpect(status().isForbidden());
+		login(EMAIL, NEW_PASSWORD).andExpect(status().isUnauthorized());
 	}
 
 	@Test
@@ -206,6 +215,29 @@ class PasswordResetTest extends IntegrationTestBase {
 		requestReset("any@x.test").andExpect(status().isTooManyRequests());
 		requestReset("ANY@x.test ").andExpect(status().isTooManyRequests());
 		requestReset("other@x.test").andExpect(status().isAccepted());
+	}
+
+	@Test
+	void resetRequestRateLimitedPerIp() throws Exception {
+		for (int i = 0; i < 10; i++) {
+			requestReset("user" + i + "@x.test").andExpect(status().isAccepted());
+		}
+		requestReset("user10@x.test").andExpect(status().isTooManyRequests());
+	}
+
+	@Test
+	void wrongCurrentPasswordsAreRateLimitedAndShareLoginBudget() throws Exception {
+		fixtures.user(Role.COACH, UserStatus.ACTIVE, EMAIL);
+		JsonNode a = session(EMAIL);
+		for (int i = 0; i < 5; i++) {
+			changePassword(a, "wrong-password-1", NEW_PASSWORD, a.get("refreshToken").asString())
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.code").value("INVALID_CURRENT_PASSWORD"));
+		}
+		changePassword(a, TestFixtures.PASSWORD, NEW_PASSWORD, a.get("refreshToken").asString())
+				.andExpect(status().isTooManyRequests()).andExpect(header().exists("Retry-After"));
+		// same bucket as login: the failures above block login for this email too
+		login(EMAIL, TestFixtures.PASSWORD).andExpect(status().isTooManyRequests());
 	}
 
 	@Test

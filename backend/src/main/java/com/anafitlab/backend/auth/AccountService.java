@@ -113,7 +113,9 @@ public class AccountService {
 	@Transactional
 	public void changePassword(CurrentUser current, ChangePasswordRequest request) {
 		AppUser user = accounts.require(current);
+		rateLimiter.ensureUnder(AuthService.LOGIN_EMAIL_BUCKET, user.getEmail(), limits.loginEmail().limit());
 		if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+			rateLimiter.record(AuthService.LOGIN_EMAIL_BUCKET, user.getEmail(), limits.loginEmail().limit());
 			throw new ApiException(HttpStatus.BAD_REQUEST, "INVALID_CURRENT_PASSWORD");
 		}
 		user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
