@@ -24,6 +24,9 @@ public final class InviteCodes {
 
 	/** Canonical form: uppercase, no spaces or dashes, O to 0, I and L to 1. */
 	public static String normalize(String input) {
+		if (input == null) {
+			return "";
+		}
 		return input.toUpperCase(Locale.ROOT)
 			.replaceAll("[\\s-]", "")
 			.replace('O', '0')
@@ -33,6 +36,9 @@ public final class InviteCodes {
 
 	/** {@code XXXXX-XXXXX} form of a normalized code. */
 	public static String display(String code) {
+		if (code == null || code.length() != LENGTH) {
+			throw new IllegalArgumentException("invite code must be exactly " + LENGTH + " characters");
+		}
 		return code.substring(0, 5) + "-" + code.substring(5);
 	}
 
