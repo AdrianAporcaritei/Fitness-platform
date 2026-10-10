@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.anafitlab.backend.auth.dto.LoginRequest;
+import com.anafitlab.backend.auth.dto.LogoutRequest;
+import com.anafitlab.backend.auth.dto.RefreshRequest;
 import com.anafitlab.backend.auth.dto.RegisterCoachRequest;
 import com.anafitlab.backend.auth.dto.TokenResponse;
 import com.anafitlab.backend.client.CoachProfile;
@@ -16,6 +18,7 @@ import com.anafitlab.backend.client.CoachProfileRepository;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.common.ratelimit.RateLimitProperties;
 import com.anafitlab.backend.common.ratelimit.RateLimiter;
+import com.anafitlab.backend.common.security.CurrentUser;
 
 @Service
 public class AuthService {
@@ -29,6 +32,7 @@ public class AuthService {
 	private final SessionFactory sessions;
 	private final AppUserRepository users;
 	private final PasswordEncoder passwordEncoder;
+	private final RefreshTokenService refreshTokens;
 	private final Clock clock;
 
 	/** Verified against when the email is unknown, so both failures cost the same time. */
@@ -36,7 +40,7 @@ public class AuthService {
 
 	AuthService(RateLimiter rateLimiter, RateLimitProperties limits, UserRegistrar registrar, CoachProfileRepository coachProfiles,
 			ActionTokenService actionTokens, AccountEmails emails, SessionFactory sessions, AppUserRepository users,
-			PasswordEncoder passwordEncoder, Clock clock) {
+			PasswordEncoder passwordEncoder, RefreshTokenService refreshTokens, Clock clock) {
 		this.rateLimiter = rateLimiter;
 		this.limits = limits;
 		this.registrar = registrar;
@@ -46,6 +50,7 @@ public class AuthService {
 		this.sessions = sessions;
 		this.users = users;
 		this.passwordEncoder = passwordEncoder;
+		this.refreshTokens = refreshTokens;
 		this.clock = clock;
 		this.dummyHash = passwordEncoder.encode("dummy-password-for-timing");
 	}
@@ -81,6 +86,19 @@ public class AuthService {
 		}
 		user.setLastLoginAt(clock.instant());
 		return sessions.create(user);
+	}
+
+	/** Not transactional itself: the rotation transaction must commit its revocations even on 401/403. */
+	public TokenResponse refresh(RefreshRequest request) {
+		return sessions.continueSession(refreshTokens.rotate(request.refreshToken()));
+	}
+
+	public void logout(LogoutRequest request) {
+		refreshTokens.revokeFamilyOf(request.refreshToken());
+	}
+
+	public void logoutAll(CurrentUser current) {
+		refreshTokens.revokeAllForUser(current.id());
 	}
 
 }

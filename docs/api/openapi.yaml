@@ -105,6 +105,79 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /auth/refresh:
+    post:
+      operationId: refresh
+      summary: Exchange a refresh token for a new session (rotation with reuse detection).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New access token and new refresh token in the same family.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: >-
+            INVALID_REFRESH_TOKEN (unknown, expired or revoked) or REFRESH_TOKEN_REUSED
+            (a rotated token was presented again; its whole family is revoked).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: ACCOUNT_SUSPENDED (the family is revoked).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Revoke the session (token family) of the given refresh token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Logged out (also for an unknown token).
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/logout-all:
+    post:
+      operationId: logoutAll
+      summary: Revoke every session of the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: All sessions revoked.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     bearerAuth:
@@ -112,6 +185,18 @@ components:
       scheme: bearer
       bearerFormat: JWT
   schemas:
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    LogoutRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
     Problem:
       type: object
       required: [type, title, status, code]

@@ -26,4 +26,12 @@ public class SessionFactory {
 				UserResponse.from(user));
 	}
 
+	/** Continues an existing session after rotation: same family, new refresh token. */
+	public TokenResponse continueSession(RotationResult rotation) {
+		IssuedAccessToken access = accessTokens.issue(rotation.user());
+		IssuedRefreshToken refresh = rotation.next();
+		return new TokenResponse(access.token(), access.expiresAt(), refresh.raw(), refresh.expiresAt(),
+				UserResponse.from(rotation.user()));
+	}
+
 }
