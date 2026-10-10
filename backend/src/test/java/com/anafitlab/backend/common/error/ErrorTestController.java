@@ -3,6 +3,8 @@ package com.anafitlab.backend.common.error;
 import java.time.Duration;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,6 +32,16 @@ class ErrorTestController {
 	@GetMapping("/test/rate-limited")
 	void rateLimited() {
 		throw new RateLimitedException(Duration.ofSeconds(90));
+	}
+
+	@GetMapping("/test/forbidden")
+	void forbidden() {
+		throw new AccessDeniedException("no");
+	}
+
+	@GetMapping("/test/unauthorized")
+	void unauthorized() {
+		throw new BadCredentialsException("no");
 	}
 
 	@GetMapping("/test/boom")
