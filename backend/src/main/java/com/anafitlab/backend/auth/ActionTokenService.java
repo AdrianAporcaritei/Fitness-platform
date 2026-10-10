@@ -4,17 +4,22 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.anafitlab.backend.common.error.ApiException;
 
 @Service
 public class ActionTokenService {
 
 	private final UserActionTokenRepository tokens;
+	private final AppUserRepository users;
 	private final Clock clock;
 
-	ActionTokenService(UserActionTokenRepository tokens, Clock clock) {
+	ActionTokenService(UserActionTokenRepository tokens, AppUserRepository users, Clock clock) {
 		this.tokens = tokens;
+		this.users = users;
 		this.clock = clock;
 	}
 
@@ -31,6 +36,26 @@ public class ActionTokenService {
 		token.setExpiresAt(now.plus(ttl(purpose)));
 		tokens.save(token);
 		return raw;
+	}
+
+	/**
+	 * Marks a token used and returns its user. Unknown, wrong-purpose, used and expired tokens are
+	 * indistinguishable (400 INVALID_TOKEN). The token row is locked so concurrent consumers cannot both succeed.
+	 */
+	@Transactional
+	public AppUser consume(String raw, ActionTokenPurpose purpose) {
+		Instant now = clock.instant();
+		UserActionToken token = tokens.lockByTokenHashAndPurpose(TokenHasher.sha256(raw), purpose)
+				.filter(t -> t.getUsedAt() == null && now.isBefore(t.getExpiresAt()))
+				.orElseThrow(ActionTokenService::invalid);
+		AppUser user = users.findById(token.getUserId()).orElseThrow(ActionTokenService::invalid);
+		token.setUsedAt(now);
+		tokens.save(token);
+		return user;
+	}
+
+	private static ApiException invalid() {
+		return new ApiException(HttpStatus.BAD_REQUEST, "INVALID_TOKEN");
 	}
 
 	private static Duration ttl(ActionTokenPurpose purpose) {

@@ -178,6 +178,49 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      summary: Verify an email address with the token from the verification email.
+      description: Sets email_verified_at. PENDING becomes ACTIVE; SUSPENDED stays SUSPENDED. The token is single use.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+      responses:
+        '204':
+          description: Email verified.
+        '400':
+          description: Validation failed, or INVALID_TOKEN (unknown, used, expired or wrong-purpose token).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/verify-email/resend:
+    post:
+      operationId: resendVerificationEmail
+      summary: Send a new verification email to the authenticated user.
+      description: Invalidates earlier verification tokens. A no-op (still 204) unless the user is PENDING. Limited to 3 per user per hour.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Email sent, or nothing to do.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Rate limited.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     bearerAuth:
@@ -196,6 +239,12 @@ components:
       required: [refreshToken]
       properties:
         refreshToken:
+          type: string
+    VerifyEmailRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
           type: string
     Problem:
       type: object

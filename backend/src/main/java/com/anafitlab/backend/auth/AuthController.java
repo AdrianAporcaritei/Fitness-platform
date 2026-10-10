@@ -11,6 +11,7 @@ import com.anafitlab.backend.auth.dto.LogoutRequest;
 import com.anafitlab.backend.auth.dto.RefreshRequest;
 import com.anafitlab.backend.auth.dto.RegisterCoachRequest;
 import com.anafitlab.backend.auth.dto.TokenResponse;
+import com.anafitlab.backend.auth.dto.VerifyEmailRequest;
 import com.anafitlab.backend.common.security.ClientIp;
 import com.anafitlab.backend.common.security.CurrentUser;
 
@@ -21,9 +22,11 @@ import jakarta.validation.Valid;
 class AuthController {
 
 	private final AuthService auth;
+	private final AccountService accounts;
 
-	AuthController(AuthService auth) {
+	AuthController(AuthService auth, AccountService accounts) {
 		this.auth = auth;
+		this.accounts = accounts;
 	}
 
 	@PostMapping("/auth/register/coach")
@@ -52,6 +55,18 @@ class AuthController {
 	@ResponseStatus(HttpStatus.NO_CONTENT)
 	void logoutAll(CurrentUser current) {
 		auth.logoutAll(current);
+	}
+
+	@PostMapping("/auth/verify-email")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+		accounts.verifyEmail(request.token());
+	}
+
+	@PostMapping("/auth/verify-email/resend")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	void resendVerification(CurrentUser current) {
+		accounts.resendVerification(current);
 	}
 
 }
