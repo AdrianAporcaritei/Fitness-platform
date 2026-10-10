@@ -179,6 +179,8 @@ components:
           maxLength: 254
         password:
           type: string
+          minLength: 10
+          maxLength: 64
           description: 10-64 characters and at most 72 UTF-8 bytes.
         firstName:
           type: string
@@ -198,6 +200,7 @@ components:
       properties:
         email:
           type: string
+          format: email
           maxLength: 254
         password:
           type: string

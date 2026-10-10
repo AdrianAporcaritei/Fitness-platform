@@ -1,7 +1,6 @@
 package com.anafitlab.backend.auth;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -15,17 +14,14 @@ import com.anafitlab.backend.auth.dto.TokenResponse;
 import com.anafitlab.backend.client.CoachProfile;
 import com.anafitlab.backend.client.CoachProfileRepository;
 import com.anafitlab.backend.common.error.ApiException;
-import com.anafitlab.backend.common.ratelimit.Limit;
+import com.anafitlab.backend.common.ratelimit.RateLimitProperties;
 import com.anafitlab.backend.common.ratelimit.RateLimiter;
 
 @Service
 public class AuthService {
 
-	private static final Limit SIGNUP_IP = new Limit(10, Duration.ofHours(1));
-	private static final Limit LOGIN_EMAIL = new Limit(5, Duration.ofMinutes(15));
-	private static final Limit LOGIN_IP = new Limit(20, Duration.ofMinutes(15));
-
 	private final RateLimiter rateLimiter;
+	private final RateLimitProperties limits;
 	private final UserRegistrar registrar;
 	private final CoachProfileRepository coachProfiles;
 	private final ActionTokenService actionTokens;
@@ -38,10 +34,11 @@ public class AuthService {
 	/** Verified against when the email is unknown, so both failures cost the same time. */
 	private final String dummyHash;
 
-	AuthService(RateLimiter rateLimiter, UserRegistrar registrar, CoachProfileRepository coachProfiles,
+	AuthService(RateLimiter rateLimiter, RateLimitProperties limits, UserRegistrar registrar, CoachProfileRepository coachProfiles,
 			ActionTokenService actionTokens, AccountEmails emails, SessionFactory sessions, AppUserRepository users,
 			PasswordEncoder passwordEncoder, Clock clock) {
 		this.rateLimiter = rateLimiter;
+		this.limits = limits;
 		this.registrar = registrar;
 		this.coachProfiles = coachProfiles;
 		this.actionTokens = actionTokens;
@@ -55,7 +52,7 @@ public class AuthService {
 
 	@Transactional
 	public TokenResponse registerCoach(RegisterCoachRequest request, String ip) {
-		rateLimiter.hit("signup-ip", ip, SIGNUP_IP);
+		rateLimiter.hit("signup-ip", ip, limits.signupIp().limit());
 		AppUser user = registrar.register(Role.COACH, request.toNewUser());
 		CoachProfile profile = new CoachProfile();
 		profile.setUserId(user.getId());
@@ -68,15 +65,15 @@ public class AuthService {
 
 	@Transactional
 	public TokenResponse login(LoginRequest request, String ip) {
-		String email = EmailNormalizer.normalize(request.email());
-		rateLimiter.ensureUnder("login-email", email, LOGIN_EMAIL);
-		rateLimiter.ensureUnder("login-ip", ip, LOGIN_IP);
+		String email = request.email();
+		rateLimiter.ensureUnder("login-email", email, limits.loginEmail().limit());
+		rateLimiter.ensureUnder("login-ip", ip, limits.loginIp().limit());
 		AppUser user = users.findByEmail(email).orElse(null);
 		String hash = user != null ? user.getPasswordHash() : dummyHash;
 		boolean matches = passwordEncoder.matches(request.password(), hash);
 		if (user == null || !matches) {
-			rateLimiter.record("login-email", email, LOGIN_EMAIL);
-			rateLimiter.record("login-ip", ip, LOGIN_IP);
+			rateLimiter.record("login-email", email, limits.loginEmail().limit());
+			rateLimiter.record("login-ip", ip, limits.loginIp().limit());
 			throw new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS");
 		}
 		if (user.getStatus() == UserStatus.SUSPENDED) {

@@ -1,15 +1,14 @@
 package com.anafitlab.backend.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.Map;
 
@@ -28,6 +27,7 @@ import com.anafitlab.backend.support.MutableClock;
 import com.anafitlab.backend.support.RecordingEmailSender;
 import com.anafitlab.backend.support.TestFixtures;
 import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 class CoachSignupAndLoginTest extends IntegrationTestBase {
 
@@ -138,8 +138,8 @@ class CoachSignupAndLoginTest extends IntegrationTestBase {
 				.andExpect(status().isUnauthorized())
 				.andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
 				.andReturn().getResponse().getContentAsString();
-		var a = (tools.jackson.databind.node.ObjectNode) json.readTree(wrong);
-		var b = (tools.jackson.databind.node.ObjectNode) json.readTree(unknown);
+		ObjectNode a = (ObjectNode) json.readTree(wrong);
+		ObjectNode b = (ObjectNode) json.readTree(unknown);
 		a.remove("instance");
 		b.remove("instance");
 		assertThat(a).isEqualTo(b);
@@ -160,8 +160,8 @@ class CoachSignupAndLoginTest extends IntegrationTestBase {
 		mockMvc.perform(login("coach@x.test", TestFixtures.PASSWORD))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.user.id").value(coach.getId().toString()));
-		java.sql.Timestamp last = jdbc.queryForObject("SELECT last_login_at FROM app_user WHERE id = ?",
-				java.sql.Timestamp.class, coach.getId());
+		Timestamp last = jdbc.queryForObject("SELECT last_login_at FROM app_user WHERE id = ?",
+				Timestamp.class, coach.getId());
 		assertThat(last.toInstant()).isEqualTo(clock.instant());
 	}
 
@@ -177,6 +177,16 @@ class CoachSignupAndLoginTest extends IntegrationTestBase {
 				.andExpect(jsonPath("$.code").value("RATE_LIMITED"));
 		clock.advance(Duration.ofMinutes(15));
 		mockMvc.perform(login("coach@x.test", TestFixtures.PASSWORD)).andExpect(status().isOk());
+	}
+
+	@Test
+	void loginLockedPerIpAfterTwentyFailuresAcrossEmails() throws Exception {
+		for (int i = 0; i < 20; i++) {
+			mockMvc.perform(login("nobody" + i + "@x.test", "wrong-password-1")).andExpect(status().isUnauthorized());
+		}
+		mockMvc.perform(login("nobody20@x.test", "wrong-password-1"))
+				.andExpect(status().isTooManyRequests())
+				.andExpect(header().exists(HttpHeaders.RETRY_AFTER));
 	}
 
 	@Test
@@ -207,7 +217,7 @@ class CoachSignupAndLoginTest extends IntegrationTestBase {
 				.andExpect(jsonPath("$.errors[?(@.field=='locale')].code").value(hasItem("REQUIRED")));
 		mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content("{}"))
 				.andExpect(status().isBadRequest())
-				.andExpect(content().string(containsString("REQUIRED")));
+				.andExpect(jsonPath("$.errors[?(@.field=='email')].code").value(hasItem("REQUIRED")));
 	}
 
 }
