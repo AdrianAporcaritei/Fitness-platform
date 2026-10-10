@@ -81,4 +81,14 @@ class CoachProfileTest extends IntegrationTestBase {
 		update(client, "{}").andExpect(status().isForbidden());
 	}
 
+	@Test
+	void deletedUserWithValidTokenGets401() throws Exception {
+		AppUser coach = fixtures.user(Role.COACH, UserStatus.ACTIVE, "gone@x.test");
+		String bearer = fixtures.bearer(coach);
+		fixtures.delete(coach);
+		mockMvc.perform(patch("/api/v1/coach/profile").header(HttpHeaders.AUTHORIZATION, bearer)
+				.contentType(MediaType.APPLICATION_JSON).content("{\"bio\":\"x\"}"))
+			.andExpect(status().isUnauthorized());
+	}
+
 }

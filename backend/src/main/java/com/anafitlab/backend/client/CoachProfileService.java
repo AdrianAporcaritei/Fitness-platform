@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.anafitlab.backend.auth.CurrentUserAccounts;
 import com.anafitlab.backend.client.dto.CoachProfileResponse;
 import com.anafitlab.backend.client.dto.UpdateCoachProfileRequest;
 import com.anafitlab.backend.common.security.CurrentUser;
@@ -13,9 +14,11 @@ import com.anafitlab.backend.common.security.CurrentUser;
 public class CoachProfileService {
 
 	private final CoachProfileRepository profiles;
+	private final CurrentUserAccounts accounts;
 
-	CoachProfileService(CoachProfileRepository profiles) {
+	CoachProfileService(CoachProfileRepository profiles, CurrentUserAccounts accounts) {
 		this.profiles = profiles;
+		this.accounts = accounts;
 	}
 
 	/** A coach without a profile row reads as an empty profile; the row is created on first update. */
@@ -27,6 +30,7 @@ public class CoachProfileService {
 
 	@Transactional
 	public CoachProfileResponse update(CurrentUser coach, UpdateCoachProfileRequest request) {
+		accounts.require(coach);
 		CoachProfile profile = profiles.findById(coach.id()).orElseGet(() -> {
 			CoachProfile created = new CoachProfile();
 			created.setUserId(coach.id());

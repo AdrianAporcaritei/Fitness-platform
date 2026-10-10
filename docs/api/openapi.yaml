@@ -639,7 +639,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '409':
-          description: INVALID_RELATIONSHIP_TRANSITION (allowed: ACTIVE to PAUSED or ENDED, PAUSED to ACTIVE or ENDED).
+          description: INVALID_RELATIONSHIP_TRANSITION (allowed transitions are ACTIVE to PAUSED or ENDED; PAUSED to ACTIVE or ENDED).
           content:
             application/problem+json:
               schema:

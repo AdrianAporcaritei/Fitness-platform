@@ -64,6 +64,14 @@ class UpdateMeTest extends IntegrationTestBase {
 	}
 
 	@Test
+	void explicitNullLeavesFieldUnchanged() throws Exception {
+		AppUser user = fixtures.user(Role.CLIENT, UserStatus.ACTIVE, "u@x.test");
+		update(user, "{\"firstName\":null,\"locale\":null}").andExpect(status().isOk())
+			.andExpect(jsonPath("$.firstName").value("Test"))
+			.andExpect(jsonPath("$.locale").value("en"));
+	}
+
+	@Test
 	void invalidValues() throws Exception {
 		AppUser user = fixtures.user(Role.CLIENT, UserStatus.ACTIVE, "u@x.test");
 		update(user, "{\"firstName\":\"  \"}").andExpect(status().isBadRequest())

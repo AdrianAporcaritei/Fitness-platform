@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -151,7 +152,7 @@ class RelationshipsTest extends IntegrationTestBase {
 		CoachProfile profile = new CoachProfile();
 		profile.setUserId(coach.getId());
 		profile.setBio("Strength coach");
-		profile.setSpecializations(java.util.List.of("strength"));
+		profile.setSpecializations(List.of("strength"));
 		profiles.save(profile);
 		String bearer = fixtures.bearer(client);
 		mockMvc.perform(get("/api/v1/me/coach").header(HttpHeaders.AUTHORIZATION, bearer))
