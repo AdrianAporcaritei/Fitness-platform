@@ -27,6 +27,37 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+    patch:
+      operationId: updateMe
+      summary: Partially update the authenticated user.
+      description: Every field is optional; an absent or null field is left unchanged. An empty object changes nothing.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+      responses:
+        '200':
+          description: The updated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation failed (REQUIRED for a blank name, TOO_LONG, INVALID_LOCALE, INVALID_TIMEZONE).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /me/password:
     post:
       operationId: changePassword
@@ -470,6 +501,211 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /me/coach:
+    get:
+      operationId: getMyCoach
+      summary: The authenticated client's current coach (ACTIVE or PAUSED).
+      description: CLIENT only.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current coach with profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyCoachResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: FORBIDDEN (not a client).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: NO_COACH.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    delete:
+      operationId: leaveCoach
+      summary: End the current relationship with the coach.
+      description: CLIENT only. Works for ACTIVE or PAUSED; sets ended_at.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Relationship ended.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: FORBIDDEN (not a client).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: NO_COACH.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/clients:
+    get:
+      operationId: listClients
+      summary: The coach's current clients (ACTIVE and PAUSED), ordered by last name then first name.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Clients.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoachClientResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/clients/{clientId}/relationship:
+    patch:
+      operationId: changeRelationship
+      summary: Pause, resume or end the relationship with a client.
+      description: ENDED sets ended_at and is final.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeRelationshipRequest'
+      responses:
+        '200':
+          description: The updated relationship.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachClientResponse'
+        '400':
+          description: Validation failed (REQUIRED) or MALFORMED_REQUEST (unknown status value).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: CLIENT_NOT_FOUND (no current relationship with this client, including other coaches' clients).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: INVALID_RELATIONSHIP_TRANSITION (allowed: ACTIVE to PAUSED or ENDED, PAUSED to ACTIVE or ENDED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/profile:
+    get:
+      operationId: getCoachProfile
+      summary: The coach's public profile.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile; empty (null bio, no specializations) if none was saved yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachProfileResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    patch:
+      operationId: updateCoachProfile
+      summary: Update the coach profile.
+      description: Absent or null fields are left unchanged.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCoachProfileRequest'
+      responses:
+        '200':
+          description: The updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachProfileResponse'
+        '400':
+          description: Validation failed (TOO_LONG, TOO_MANY, REQUIRED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /coach/invites:
     post:
       operationId: createInvite
@@ -690,6 +926,94 @@ components:
         valid:
           type: boolean
           description: Always true; invalid codes are errors.
+    UpdateMeRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    ChangeRelationshipRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, ENDED]
+    CoachClientResponse:
+      type: object
+      required: [clientId, firstName, lastName, email, status, startedAt]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, ENDED]
+        startedAt:
+          type: string
+          format: date-time
+    MyCoachResponse:
+      type: object
+      required: [coachId, firstName, lastName, specializations, status, startedAt]
+      properties:
+        coachId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        bio:
+          type: [string, 'null']
+        specializations:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED]
+        startedAt:
+          type: string
+          format: date-time
+    CoachProfileResponse:
+      type: object
+      required: [specializations]
+      properties:
+        bio:
+          type: [string, 'null']
+        specializations:
+          type: array
+          items:
+            type: string
+    UpdateCoachProfileRequest:
+      type: object
+      properties:
+        bio:
+          type: string
+          maxLength: 2000
+        specializations:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
     Problem:
       type: object
       required: [type, title, status, code]

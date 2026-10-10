@@ -2,12 +2,14 @@ package com.anafitlab.backend.auth;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.anafitlab.backend.auth.dto.ChangePasswordRequest;
+import com.anafitlab.backend.auth.dto.UpdateMeRequest;
 import com.anafitlab.backend.auth.dto.UserResponse;
 import com.anafitlab.backend.common.security.CurrentUser;
 
@@ -25,6 +27,11 @@ class MeController {
 	@GetMapping("/me")
 	UserResponse me(CurrentUser current) {
 		return accounts.me(current);
+	}
+
+	@PatchMapping("/me")
+	UserResponse update(CurrentUser current, @Valid @RequestBody UpdateMeRequest request) {
+		return accounts.updateMe(current, request);
 	}
 
 	@PostMapping("/me/password")

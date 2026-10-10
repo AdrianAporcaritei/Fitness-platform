@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.anafitlab.backend.auth.dto.ChangePasswordRequest;
 import com.anafitlab.backend.auth.dto.TokenResponse;
+import com.anafitlab.backend.auth.dto.UpdateMeRequest;
 import com.anafitlab.backend.auth.dto.UserResponse;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.common.ratelimit.RateLimitProperties;
@@ -47,6 +48,24 @@ public class AccountService {
 	@Transactional(readOnly = true)
 	public UserResponse me(CurrentUser current) {
 		return UserResponse.from(accounts.require(current));
+	}
+
+	@Transactional
+	public UserResponse updateMe(CurrentUser current, UpdateMeRequest request) {
+		AppUser user = accounts.require(current);
+		if (request.firstName() != null) {
+			user.setFirstName(request.firstName().strip());
+		}
+		if (request.lastName() != null) {
+			user.setLastName(request.lastName().strip());
+		}
+		if (request.locale() != null) {
+			user.setLocale(request.locale());
+		}
+		if (request.timezone() != null) {
+			user.setTimezone(request.timezone());
+		}
+		return UserResponse.from(users.save(user));
 	}
 
 	/** PENDING becomes ACTIVE; SUSPENDED stays SUSPENDED but is marked verified. */
