@@ -99,6 +99,119 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /auth/register/client:
+    post:
+      operationId: registerClient
+      summary: Sign up as a client with a coach invite code.
+      description: >
+        One transaction: the invite is locked, a PENDING CLIENT account is created, an ACTIVE coach relationship
+        is created and the invite is marked USED. Any failure leaves the invite PENDING and creates no account.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterClientRequest'
+      responses:
+        '201':
+          description: Account created and linked to the coach.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed (codes in `errors[]`, plus REQUIRED for code).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: EMAIL_TAKEN or ALREADY_HAS_COACH.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: INVITE_USED, INVITE_REVOKED or INVITE_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED (10 signups per IP per hour); see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /me/coach-link:
+    post:
+      operationId: linkCoach
+      summary: Link the authenticated client, who has no current coach, to a coach with an invite code.
+      description: CLIENT only. A PENDING client is allowed. Rate limited per IP (20 per 15 minutes).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachLinkRequest'
+      responses:
+        '201':
+          description: Linked; the relationship is ACTIVE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachLinkResponse'
+        '400':
+          description: Validation failed (REQUIRED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: FORBIDDEN (not a client).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: ALREADY_HAS_COACH (ACTIVE or PAUSED relationship exists, also on a concurrent link).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: INVITE_USED, INVITE_REVOKED or INVITE_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED; see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
   /auth/login:
     post:
       operationId: login
@@ -659,6 +772,57 @@ components:
         timezone:
           type: string
           description: IANA time zone name.
+    RegisterClientRequest:
+      type: object
+      required: [code, email, password, firstName, lastName, locale, timezone]
+      properties:
+        code:
+          type: string
+          description: Invite code, accepted loosely like in GET /invites/{code}.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    CoachLinkRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+    CoachLinkResponse:
+      type: object
+      required: [coachId, coachFirstName, coachLastName, status, startedAt]
+      properties:
+        coachId:
+          type: string
+          format: uuid
+        coachFirstName:
+          type: string
+        coachLastName:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE]
+        startedAt:
+          type: string
+          format: date-time
     LoginRequest:
       type: object
       required: [email, password]

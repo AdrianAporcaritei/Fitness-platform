@@ -60,6 +60,7 @@ class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers(PUBLIC).permitAll()
 						.requestMatchers(API + "/coach/**").hasRole("COACH")
+						.requestMatchers(API + "/me/coach-link", API + "/me/coach/**").hasRole("CLIENT")
 						.requestMatchers(API + "/admin/**").hasRole("ADMIN")
 						.anyRequest().authenticated())
 				.exceptionHandling(e -> e.authenticationEntryPoint(entryPoint).accessDeniedHandler(accessDeniedHandler))
