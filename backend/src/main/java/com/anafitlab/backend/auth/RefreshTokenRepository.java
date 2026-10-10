@@ -13,17 +13,17 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
 
 	Optional<RefreshToken> findByTokenHash(String tokenHash);
 
-	@Modifying
-	@Query("UPDATE RefreshToken t SET t.revokedAt = :now WHERE t.familyId = :familyId AND t.revokedAt IS NULL")
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("UPDATE RefreshToken t SET t.revokedAt = :now, t.updatedAt = :now WHERE t.familyId = :familyId AND t.revokedAt IS NULL")
 	int revokeFamily(@Param("familyId") UUID familyId, @Param("now") Instant now);
 
-	@Modifying
-	@Query("UPDATE RefreshToken t SET t.revokedAt = :now WHERE t.userId = :userId AND t.revokedAt IS NULL")
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
+	@Query("UPDATE RefreshToken t SET t.revokedAt = :now, t.updatedAt = :now WHERE t.userId = :userId AND t.revokedAt IS NULL")
 	int revokeAllForUser(@Param("userId") UUID userId, @Param("now") Instant now);
 
-	@Modifying
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("""
-			UPDATE RefreshToken t SET t.revokedAt = :now
+			UPDATE RefreshToken t SET t.revokedAt = :now, t.updatedAt = :now
 			WHERE t.userId = :userId AND t.familyId <> :familyId AND t.revokedAt IS NULL
 			""")
 	int revokeAllForUserExceptFamily(@Param("userId") UUID userId, @Param("familyId") UUID familyId,

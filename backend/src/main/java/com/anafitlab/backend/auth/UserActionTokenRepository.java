@@ -13,9 +13,9 @@ public interface UserActionTokenRepository extends JpaRepository<UserActionToken
 
 	Optional<UserActionToken> findByTokenHashAndPurpose(String tokenHash, ActionTokenPurpose purpose);
 
-	@Modifying
+	@Modifying(clearAutomatically = true, flushAutomatically = true)
 	@Query("""
-			UPDATE UserActionToken t SET t.usedAt = :now
+			UPDATE UserActionToken t SET t.usedAt = :now, t.updatedAt = :now
 			WHERE t.userId = :userId AND t.purpose = :purpose AND t.usedAt IS NULL
 			""")
 	int invalidateUnused(@Param("userId") UUID userId, @Param("purpose") ActionTokenPurpose purpose,

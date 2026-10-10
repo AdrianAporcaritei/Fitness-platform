@@ -165,9 +165,9 @@ class JwtSecurityTest extends IntegrationTestBase {
 		AppUser coach = fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
 		String stale = fixtures.bearer(coach);
 		clock.advance(Duration.ofHours(1));
-		// not implemented yet: reaching the router (404) proves security let the request through
+		// 400 (empty body) / 404 (unknown invite) prove security let the request through to the handler
 		mockMvc.perform(post("/api/v1/auth/login").header(HttpHeaders.AUTHORIZATION, stale))
-				.andExpect(status().isNotFound());
+				.andExpect(status().isBadRequest());
 		mockMvc.perform(get("/api/v1/invites/ABC").header(HttpHeaders.AUTHORIZATION, stale))
 				.andExpect(status().isNotFound());
 		mockMvc.perform(get("/api/v1/me").header(HttpHeaders.AUTHORIZATION, stale))

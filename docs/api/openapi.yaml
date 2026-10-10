@@ -27,6 +27,84 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/Problem'
+  /auth/register/coach:
+    post:
+      operationId: registerCoach
+      summary: Sign up as a coach. Creates a PENDING account, sends a verification email and returns a session.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCoachRequest'
+      responses:
+        '201':
+          description: Account created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed (codes in `errors[]`, e.g. REQUIRED, INVALID_EMAIL, TOO_LONG, PASSWORD_POLICY, INVALID_LOCALE, INVALID_TIMEZONE).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: EMAIL_TAKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED (10 signups per IP per hour); see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/login:
+    post:
+      operationId: login
+      summary: Sign in with email and password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: INVALID_CREDENTIALS (identical for unknown email and wrong password).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: ACCOUNT_SUSPENDED (only after a correct password).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED (5 failures per email or 20 per IP per 15 minutes); see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     bearerAuth:
@@ -91,6 +169,39 @@ components:
         timezone:
           type: string
           description: IANA time zone name.
+    RegisterCoachRequest:
+      type: object
+      required: [email, password, firstName, lastName, locale, timezone]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 200
     TokenResponse:
       type: object
       required: [accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user]
