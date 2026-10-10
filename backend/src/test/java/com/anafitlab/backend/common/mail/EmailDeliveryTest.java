@@ -2,9 +2,11 @@ package com.anafitlab.backend.common.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.anafitlab.backend.auth.AccountEmails;
@@ -45,6 +47,7 @@ class EmailDeliveryTest extends IntegrationTestBase {
 		assertThat(email.subject()).isEqualTo("Confirmă adresa de email pentru Ana Fit Lab");
 		assertThat(email.body()).contains("http://app.test/verify-email?token=abc_DEF-123");
 		assertThat(sender.extractToken(email)).isEqualTo("abc_DEF-123");
+		assertThat(email.body()).contains("Salut, Test,");
 	}
 
 	@Test
@@ -76,6 +79,18 @@ class EmailDeliveryTest extends IntegrationTestBase {
 		assertThatCode(() -> tx.executeWithoutResult(s -> accountEmails.sendVerification(user, "tok")))
 			.doesNotThrowAnyException();
 		assertThat(sender.sent()).isEmpty();
+	}
+
+	@Test
+	void failsFastOutsideTransaction() {
+		AppUser user = roUser();
+		assertThatThrownBy(() -> accountEmails.sendVerification(user, "tok"))
+			.isInstanceOf(IllegalStateException.class);
+	}
+
+	@Test
+	void keepsBootDefaultTaskExecutor(@Autowired ApplicationContext context) {
+		assertThat(context.containsBean("applicationTaskExecutor")).isTrue();
 	}
 
 }

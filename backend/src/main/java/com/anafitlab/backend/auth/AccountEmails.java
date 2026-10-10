@@ -5,6 +5,7 @@ import java.util.Locale;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import com.anafitlab.backend.common.AppProperties;
 import com.anafitlab.backend.common.mail.OutgoingEmail;
@@ -32,8 +33,13 @@ public class AccountEmails {
 	}
 
 	private void publish(AppUser user, String key, String pathAndQuery) {
+		if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+			throw new IllegalStateException("Account emails must be sent inside a transaction");
+		}
 		Locale locale = Locale.forLanguageTag(user.getLocale());
-		String link = app.baseUrl() + pathAndQuery;
+		String baseUrl = app.baseUrl().endsWith("/")
+				? app.baseUrl().substring(0, app.baseUrl().length() - 1) : app.baseUrl();
+		String link = baseUrl + pathAndQuery;
 		String subject = messages.getMessage(key + ".subject", null, locale);
 		String body = messages.getMessage(key + ".body", new Object[] {link, user.getFirstName()}, locale);
 		events.publishEvent(new OutgoingEmail(user.getEmail(), subject, body));

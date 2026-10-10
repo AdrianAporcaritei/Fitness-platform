@@ -2,8 +2,6 @@ package com.anafitlab.backend.common.mail;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -14,17 +12,17 @@ public class EmailDeliveryListener {
 	private static final Logger log = LoggerFactory.getLogger(EmailDeliveryListener.class);
 
 	private final EmailSender sender;
-	private final TaskExecutor executor;
+	private final EmailDispatcher dispatcher;
 
-	public EmailDeliveryListener(EmailSender sender, @Qualifier(MailConfig.EMAIL_EXECUTOR) TaskExecutor executor) {
+	public EmailDeliveryListener(EmailSender sender, EmailDispatcher dispatcher) {
 		this.sender = sender;
-		this.executor = executor;
+		this.dispatcher = dispatcher;
 	}
 
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void onEmail(OutgoingEmail email) {
 		try {
-			executor.execute(() -> deliver(email));
+			dispatcher.dispatch(() -> deliver(email));
 		}
 		catch (RuntimeException e) {
 			log.warn("Could not queue email to {}", email.to(), e);
