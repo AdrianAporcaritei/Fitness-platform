@@ -7,7 +7,26 @@ info:
     Errors follow RFC 9457 (application/problem+json) with a stable machine-readable `code`.
 servers:
   - url: /api/v1
-paths: {}
+paths:
+  /me:
+    get:
+      operationId: getMe
+      summary: The authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Missing, invalid or expired access token, or the user no longer exists.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
 components:
   securitySchemes:
     bearerAuth:

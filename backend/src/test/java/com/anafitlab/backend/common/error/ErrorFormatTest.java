@@ -3,7 +3,6 @@ package com.anafitlab.backend.common.error;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -61,7 +60,7 @@ class ErrorFormatTest {
 
 	@Test
 	void validationErrorsListFieldCodes() throws Exception {
-		mockMvc.perform(post("/api/v1/test/validate").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{}"))
+		mockMvc.perform(post("/api/v1/test/validate").contentType(MediaType.APPLICATION_JSON).content("{}"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
 				.andExpect(jsonPath("$.errors[0].field").value("name"))
@@ -70,7 +69,7 @@ class ErrorFormatTest {
 
 	@Test
 	void malformedJsonIs400() throws Exception {
-		mockMvc.perform(post("/api/v1/test/validate").with(csrf()).contentType(MediaType.APPLICATION_JSON).content("{"))
+		mockMvc.perform(post("/api/v1/test/validate").contentType(MediaType.APPLICATION_JSON).content("{"))
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.code").value("MALFORMED_REQUEST"));
 	}
@@ -112,14 +111,14 @@ class ErrorFormatTest {
 
 	@Test
 	void wrongMethodIs405WithCode() throws Exception {
-		mockMvc.perform(post("/api/v1/test/api-error").with(csrf())).andExpect(status().isMethodNotAllowed())
+		mockMvc.perform(post("/api/v1/test/api-error")).andExpect(status().isMethodNotAllowed())
 				.andExpect(jsonPath("$.code").value("METHOD_NOT_ALLOWED"))
 				.andExpect(header().exists("Allow"));
 	}
 
 	@Test
 	void wrongContentTypeIs415WithCode() throws Exception {
-		mockMvc.perform(post("/api/v1/test/validate").with(csrf()).contentType(MediaType.TEXT_PLAIN).content("x"))
+		mockMvc.perform(post("/api/v1/test/validate").contentType(MediaType.TEXT_PLAIN).content("x"))
 				.andExpect(status().isUnsupportedMediaType())
 				.andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
 	}

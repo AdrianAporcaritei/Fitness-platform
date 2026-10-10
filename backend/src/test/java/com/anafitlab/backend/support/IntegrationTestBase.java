@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
 import com.anafitlab.backend.TestcontainersConfiguration;
+import com.anafitlab.backend.common.ratelimit.RateLimiter;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -19,8 +20,16 @@ public abstract class IntegrationTestBase {
 	@Autowired
 	private JdbcTemplate jdbc;
 
+	@Autowired
+	private MutableClock clock;
+
+	@Autowired
+	private RateLimiter rateLimiter;
+
 	@BeforeEach
-	void resetDatabase() {
+	void resetState() {
+		clock.set(TestSupportConfig.START);
+		rateLimiter.reset();
 		jdbc.execute("TRUNCATE app_user, coach_profile, coach_client, coach_invite, refresh_token, user_action_token CASCADE");
 	}
 

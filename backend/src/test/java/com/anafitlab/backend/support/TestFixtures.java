@@ -5,6 +5,7 @@ import java.time.Instant;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
+import com.anafitlab.backend.auth.AccessTokenIssuer;
 import com.anafitlab.backend.auth.AppUser;
 import com.anafitlab.backend.auth.AppUserRepository;
 import com.anafitlab.backend.auth.Role;
@@ -22,11 +23,14 @@ public class TestFixtures {
 	private final AppUserRepository users;
 	private final CoachClientRepository links;
 	private final PasswordEncoder encoder;
+	private final AccessTokenIssuer issuer;
 
-	public TestFixtures(AppUserRepository users, CoachClientRepository links, PasswordEncoder encoder) {
+	public TestFixtures(AppUserRepository users, CoachClientRepository links, PasswordEncoder encoder,
+			AccessTokenIssuer issuer) {
 		this.users = users;
 		this.links = links;
 		this.encoder = encoder;
+		this.issuer = issuer;
 	}
 
 	public AppUser user(Role role, UserStatus status, String email) {
@@ -52,6 +56,20 @@ public class TestFixtures {
 		l.setStatus(status);
 		l.setStartedAt(Instant.now());
 		return links.save(l);
+	}
+
+	/** Authorization header value carrying a fresh access token for the user. */
+	public String bearer(AppUser user) {
+		return "Bearer " + issuer.issue(user).token();
+	}
+
+	public void setLocale(AppUser user, String locale) {
+		user.setLocale(locale);
+		users.save(user);
+	}
+
+	public void delete(AppUser user) {
+		users.deleteById(user.getId());
 	}
 
 }
