@@ -1,5 +1,6 @@
 package com.anafitlab.backend.common;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -27,7 +28,7 @@ class OpenApiContractServedTest {
 	void servesHandWrittenContract() throws Exception {
 		mockMvc.perform(get("/openapi.yaml"))
 				.andExpect(status().isOk())
-				.andExpect(content().string(org.hamcrest.Matchers.containsString("openapi: 3.1")));
+				.andExpect(content().string(containsString("openapi: 3.1")));
 	}
 
 }
