@@ -92,10 +92,7 @@ void main() {
       expect(currentLocation(t), '/home');
     });
 
-    const anyone = {
-      '/verify-email?token=x': 'verify-email',
-      '/reset-password?token=x': 'reset-password',
-    };
+    const anyone = {'/reset-password?token=x': 'reset-password'};
     anyone.forEach((location, name) {
       testWidgets('$location reachable signed out', (t) async {
         await pumpApp(t, initialLocation: location);
@@ -108,6 +105,28 @@ void main() {
         expect(currentLocation(t), location);
         expect(find.text(name), findsOneWidget);
       });
+    });
+
+    testWidgets('/verify-email?token=x reachable signed out', (t) async {
+      final api = FakeApi();
+      api.on('POST', '/auth/verify-email', (_) => FakeResponse.empty(204));
+      await pumpApp(t, api: api, initialLocation: '/verify-email?token=x');
+      expect(currentLocation(t), '/verify-email?token=x');
+      expect(find.text('Email confirmed'), findsOneWidget);
+    });
+
+    testWidgets('/verify-email?token=x reachable signed in', (t) async {
+      final api = FakeApi();
+      api.on('POST', '/auth/verify-email', (_) => FakeResponse.empty(204));
+      api.on('GET', '/me', (_) => FakeResponse.json(200, userJson()));
+      await pumpApp(
+        t,
+        api: api,
+        store: await _signedInStore(api),
+        initialLocation: '/verify-email?token=x',
+      );
+      expect(currentLocation(t), '/verify-email?token=x');
+      expect(find.text('Email confirmed'), findsOneWidget);
     });
 
     testWidgets('/join/abc reachable signed out', (t) async {
