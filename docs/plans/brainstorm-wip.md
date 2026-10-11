@@ -1,6 +1,6 @@
 # Brainstorm WIP – Slice 1: Identity, Auth, Coach–Client Linking
 
-**Status:** paused (2026-10-08) during the design-presentation phase.
+**Status:** Implemented on branch feature/slice1-identity-auth — see docs/superpowers/plans/2026-10-10-slice1-identity-auth.md.
 **Process:** superpowers `brainstorming` skill, **architectural** path → design sections → written spec (`docs/superpowers/specs/…`) → user review → `writing-plans`. No code until spec and plan are approved.
 **Scope:** step 1 of `docs/domain-model.md` §11 – `app_user` (COACH/CLIENT/ADMIN), `coach_profile`, `coach_client`, JWT auth, ro/en localization – plus project foundations.
 
@@ -144,7 +144,7 @@ No ADMIN endpoints in this slice (A3); `SUSPENDED` set directly in DB until the 
 
 **Design complete** (section 4 approved 2026-10-10: plain-text emails, no Mailpit in tests). Full spec: `docs/superpowers/specs/2026-10-10-slice1-identity-auth-design.md`.
 
-**Resume at:** user review of the written spec, then `writing-plans`.
+**Resume at:** Implemented on branch feature/slice1-identity-auth — see docs/superpowers/plans/2026-10-10-slice1-identity-auth.md.
 
 Remaining design sections:
 2. **Auth flows** – coach signup, client signup with invite code, login, refresh/rotation, logout, email verification, password reset, what PENDING users can't do, ADMIN bootstrap.

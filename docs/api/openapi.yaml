@@ -1,0 +1,1184 @@
+openapi: 3.1.0
+info:
+  title: Ana Fit Lab API
+  version: 0.1.0
+  description: >
+    Hand-written contract; each endpoint is added here before it is implemented.
+    Errors follow RFC 9457 (application/problem+json) with a stable machine-readable `code`.
+servers:
+  - url: /api/v1
+paths:
+  /me:
+    get:
+      operationId: getMe
+      summary: The authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          description: Missing, invalid or expired access token, or the user no longer exists.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    patch:
+      operationId: updateMe
+      summary: Partially update the authenticated user.
+      description: Every field is optional; an absent or null field is left unchanged. An empty object changes nothing.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMeRequest'
+      responses:
+        '200':
+          description: The updated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '400':
+          description: Validation failed (REQUIRED for a blank name, TOO_LONG, INVALID_LOCALE, INVALID_TIMEZONE).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /me/password:
+    post:
+      operationId: changePassword
+      summary: Change the password of the authenticated user.
+      description: >
+        Revokes every session except the one identified by refreshToken. If refreshToken is not one of the
+        caller's tokens, all sessions are revoked.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '204':
+          description: Password changed.
+        '400':
+          description: Validation failed (PASSWORD_POLICY, REQUIRED), or INVALID_CURRENT_PASSWORD.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Too many wrong current passwords (shares the login budget of 5 per email per 15 minutes).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/register/coach:
+    post:
+      operationId: registerCoach
+      summary: Sign up as a coach. Creates a PENDING account, sends a verification email and returns a session.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterCoachRequest'
+      responses:
+        '201':
+          description: Account created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed (codes in `errors[]`, e.g. REQUIRED, INVALID_EMAIL, TOO_LONG, PASSWORD_POLICY, INVALID_LOCALE, INVALID_TIMEZONE).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: EMAIL_TAKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED (10 signups per IP per hour); see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/register/client:
+    post:
+      operationId: registerClient
+      summary: Sign up as a client with a coach invite code.
+      description: >
+        One transaction: the invite is locked, a PENDING CLIENT account is created, an ACTIVE coach relationship
+        is created and the invite is marked USED. Any failure leaves the invite PENDING and creates no account.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterClientRequest'
+      responses:
+        '201':
+          description: Account created and linked to the coach.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed (codes in `errors[]`, plus REQUIRED for code).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: EMAIL_TAKEN, ALREADY_HAS_COACH, or COACH_UNAVAILABLE (the inviting coach is not ACTIVE, e.g. suspended).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: INVITE_USED, INVITE_REVOKED or INVITE_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED (10 signups per IP per hour); see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /me/coach-link:
+    post:
+      operationId: linkCoach
+      summary: Link the authenticated client, who has no current coach, to a coach with an invite code.
+      description: CLIENT only. A PENDING client is allowed. Rate limited per IP (20 per 15 minutes).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CoachLinkRequest'
+      responses:
+        '201':
+          description: Linked; the relationship is ACTIVE.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachLinkResponse'
+        '400':
+          description: Validation failed (REQUIRED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: FORBIDDEN (not a client).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: >
+            ALREADY_HAS_COACH (ACTIVE or PAUSED relationship exists, also on a concurrent link), or COACH_UNAVAILABLE
+            (the inviting coach is not ACTIVE, e.g. suspended).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: INVITE_USED, INVITE_REVOKED or INVITE_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED; see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/login:
+    post:
+      operationId: login
+      summary: Sign in with email and password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: INVALID_CREDENTIALS (identical for unknown email and wrong password).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: ACCOUNT_SUSPENDED (only after a correct password).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: RATE_LIMITED (5 failures per email or 20 per IP per 15 minutes); see Retry-After.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/refresh:
+    post:
+      operationId: refresh
+      summary: Exchange a refresh token for a new session (rotation with reuse detection).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New access token and new refresh token in the same family.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: >-
+            INVALID_REFRESH_TOKEN (unknown, expired or revoked) or REFRESH_TOKEN_REUSED
+            (a rotated token was presented again; its whole family is revoked).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: ACCOUNT_SUSPENDED (the family is revoked).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/logout:
+    post:
+      operationId: logout
+      summary: Revoke the session (token family) of the given refresh token.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: Logged out (also for an unknown token).
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/logout-all:
+    post:
+      operationId: logoutAll
+      summary: Revoke every session of the authenticated user.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: All sessions revoked.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/verify-email:
+    post:
+      operationId: verifyEmail
+      summary: Verify an email address with the token from the verification email.
+      description: Sets email_verified_at. PENDING becomes ACTIVE; SUSPENDED stays SUSPENDED. The token is single use.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+      responses:
+        '204':
+          description: Email verified.
+        '400':
+          description: Validation failed, or INVALID_TOKEN (unknown, used, expired or wrong-purpose token).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/verify-email/resend:
+    post:
+      operationId: resendVerificationEmail
+      summary: Send a new verification email to the authenticated user.
+      description: Invalidates earlier verification tokens. A no-op (still 204) unless the user is PENDING. Limited to 3 per user per hour.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Email sent, or nothing to do.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Rate limited.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/password-reset/request:
+    post:
+      operationId: requestPasswordReset
+      summary: Request a password reset email.
+      description: >
+        Always 202 with no body, whether or not the email belongs to an account (suspended accounts get no email).
+        Limited to 3 per email and 10 per IP per hour.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+      responses:
+        '202':
+          description: Accepted.
+        '400':
+          description: Validation failed.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Rate limited.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /auth/password-reset/confirm:
+    post:
+      operationId: confirmPasswordReset
+      summary: Set a new password with the token from the reset email.
+      description: >
+        Single-use token valid for 1 hour. Revokes all refresh tokens, verifies a PENDING user (ACTIVE) and
+        returns a new session.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+      responses:
+        '200':
+          description: Password changed; new session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Validation failed (PASSWORD_POLICY, REQUIRED), or INVALID_TOKEN.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: ACCOUNT_SUSPENDED. Nothing is changed and the token stays usable.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /invites/{code}:
+    get:
+      operationId: previewInvite
+      summary: Public lookup of an invite code (used by the join page).
+      description: >
+        The code is accepted loosely: case-insensitive, dashes and spaces ignored, O read as 0 and I/L as 1.
+        Rate limited per IP (20 per 15 minutes). An invalid code is an error, so a 200 always has valid=true.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The invite is usable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitePreviewResponse'
+        '404':
+          description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: COACH_UNAVAILABLE (the inviting coach is not ACTIVE, e.g. suspended); the invite stays PENDING.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '410':
+          description: INVITE_USED, INVITE_REVOKED or INVITE_EXPIRED.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '429':
+          description: Too many lookups from this IP (RATE_LIMITED, with Retry-After).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /me/coach:
+    get:
+      operationId: getMyCoach
+      summary: The authenticated client's current coach (ACTIVE or PAUSED).
+      description: CLIENT only.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: The current coach with profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyCoachResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: FORBIDDEN (not a client).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: NO_COACH.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    delete:
+      operationId: leaveCoach
+      summary: End the current relationship with the coach.
+      description: CLIENT only. Works for ACTIVE or PAUSED; sets ended_at.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Relationship ended.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: FORBIDDEN (not a client).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: NO_COACH.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/clients:
+    get:
+      operationId: listClients
+      summary: The coach's current clients (ACTIVE and PAUSED), ordered by last name then first name.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Clients.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CoachClientResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/clients/{clientId}/relationship:
+    patch:
+      operationId: changeRelationship
+      summary: Pause, resume or end the relationship with a client.
+      description: ENDED sets ended_at and is final.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: clientId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeRelationshipRequest'
+      responses:
+        '200':
+          description: The updated relationship.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachClientResponse'
+        '400':
+          description: Validation failed (REQUIRED) or MALFORMED_REQUEST (unknown status value).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: CLIENT_NOT_FOUND (no current relationship with this client, including other coaches' clients).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: INVALID_RELATIONSHIP_TRANSITION (allowed transitions are ACTIVE to PAUSED or ENDED; PAUSED to ACTIVE or ENDED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/profile:
+    get:
+      operationId: getCoachProfile
+      summary: The coach's public profile.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Profile; empty (null bio, no specializations) if none was saved yet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachProfileResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    patch:
+      operationId: updateCoachProfile
+      summary: Update the coach profile.
+      description: Absent or null fields are left unchanged.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCoachProfileRequest'
+      responses:
+        '200':
+          description: The updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoachProfileResponse'
+        '400':
+          description: Validation failed (TOO_LONG, TOO_MANY, REQUIRED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/invites:
+    post:
+      operationId: createInvite
+      summary: Create a single-use invite code (valid 7 days).
+      description: The code is returned only in this response; only its hash is stored. The body is optional.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInviteRequest'
+      responses:
+        '201':
+          description: Invite created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreatedInviteResponse'
+        '400':
+          description: Validation failed (TOO_LONG).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN), or the coach's email is not verified (EMAIL_NOT_VERIFIED).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    get:
+      operationId: listInvites
+      summary: The coach's invites, newest first. Codes are never returned.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Invites with derived status.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InviteResponse'
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+  /coach/invites/{id}/revoke:
+    post:
+      operationId: revokeInvite
+      summary: Revoke a pending invite.
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Revoked.
+        '401':
+          description: Not authenticated.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Not a coach (FORBIDDEN).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: INVITE_NOT_FOUND (unknown, or belongs to another coach).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: INVITE_NOT_REVOCABLE (used, revoked or expired).
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    RefreshRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    LogoutRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+    VerifyEmailRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+    PasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+    PasswordResetConfirmRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token:
+          type: string
+        newPassword:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+    ChangePasswordRequest:
+      type: object
+      required: [currentPassword, newPassword, refreshToken]
+      properties:
+        currentPassword:
+          type: string
+          maxLength: 200
+        newPassword:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+        refreshToken:
+          type: string
+          description: Refresh token of the current session; that session is kept.
+    CreateInviteRequest:
+      type: object
+      properties:
+        label:
+          type: string
+          maxLength: 100
+          description: Optional note for the coach, such as the prospective client's name.
+    CreatedInviteResponse:
+      type: object
+      required: [id, code, link, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          type: string
+          description: Display form XXXXX-XXXXX (Crockford base32).
+        link:
+          type: string
+          description: "{baseUrl}/join/{code}"
+        label:
+          type: [string, 'null']
+        expiresAt:
+          type: string
+          format: date-time
+    InviteResponse:
+      type: object
+      required: [id, status, createdAt, expiresAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: [string, 'null']
+        status:
+          type: string
+          enum: [PENDING, USED, REVOKED, EXPIRED]
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        usedAt:
+          type: [string, 'null']
+          format: date-time
+    InvitePreviewResponse:
+      type: object
+      required: [coachFirstName, coachLastName, valid]
+      properties:
+        coachFirstName:
+          type: string
+        coachLastName:
+          type: string
+        valid:
+          type: boolean
+          description: Always true; invalid codes are errors.
+    UpdateMeRequest:
+      type: object
+      properties:
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    ChangeRelationshipRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, ENDED]
+    CoachClientResponse:
+      type: object
+      required: [clientId, firstName, lastName, email, status, startedAt]
+      properties:
+        clientId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, ENDED]
+        startedAt:
+          type: string
+          format: date-time
+    MyCoachResponse:
+      type: object
+      required: [coachId, firstName, lastName, specializations, status, startedAt]
+      properties:
+        coachId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        bio:
+          type: [string, 'null']
+        specializations:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED]
+        startedAt:
+          type: string
+          format: date-time
+    CoachProfileResponse:
+      type: object
+      required: [specializations]
+      properties:
+        bio:
+          type: [string, 'null']
+        specializations:
+          type: array
+          items:
+            type: string
+    UpdateCoachProfileRequest:
+      type: object
+      properties:
+        bio:
+          type: string
+          maxLength: 2000
+        specializations:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+    Problem:
+      type: object
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+          description: Localized from the user's locale, or Accept-Language when unauthenticated.
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+          description: Stable machine-readable error code.
+        errors:
+          type: array
+          description: Present for validation failures.
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+    UserResponse:
+      type: object
+      required: [id, email, role, status, firstName, lastName, locale, timezone]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [COACH, CLIENT, ADMIN]
+        status:
+          type: string
+          enum: [PENDING, ACTIVE, SUSPENDED]
+        firstName:
+          type: string
+        lastName:
+          type: string
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    RegisterCoachRequest:
+      type: object
+      required: [email, password, firstName, lastName, locale, timezone]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    RegisterClientRequest:
+      type: object
+      required: [code, email, password, firstName, lastName, locale, timezone]
+      properties:
+        code:
+          type: string
+          description: Invite code, accepted loosely like in GET /invites/{code}.
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 10
+          maxLength: 64
+          description: 10-64 characters and at most 72 UTF-8 bytes.
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        locale:
+          type: string
+          enum: [ro, en]
+        timezone:
+          type: string
+          description: IANA time zone name.
+    CoachLinkRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+    CoachLinkResponse:
+      type: object
+      required: [coachId, coachFirstName, coachLastName, status, startedAt]
+      properties:
+        coachId:
+          type: string
+          format: uuid
+        coachFirstName:
+          type: string
+        coachLastName:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE]
+        startedAt:
+          type: string
+          format: date-time
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          maxLength: 200
+    TokenResponse:
+      type: object
+      required: [accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, user]
+      properties:
+        accessToken:
+          type: string
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+        refreshToken:
+          type: string
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/UserResponse'

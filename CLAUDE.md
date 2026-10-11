@@ -8,10 +8,11 @@ Web first (Flutter web), then iOS and Android from the same Flutter codebase.
 - API contract: `docs/api/openapi.yaml`. Define or update the endpoint here BEFORE implementing it.
 
 ## Stack
-- Backend (`backend/`): Java 21, Spring Boot 3, Spring Security (JWT), Spring Data JPA, PostgreSQL, Flyway, Spring WebSocket (STOMP), springdoc-openapi
+- Backend (`backend/`): Java 21, Spring Boot 4 (4.1.1), Spring Security (JWT), Spring Data JPA, PostgreSQL, Flyway, Spring WebSocket (STOMP), springdoc-openapi
 - Frontend (`app/`): Flutter (web first), Riverpod, go_router, API client generated from `openapi.yaml`
 - Tests: JUnit 5 + Testcontainers (backend), flutter_test (frontend)
-- Local infra: `docker-compose.yml` (PostgreSQL, MinIO for progress photos)
+- Local infra: `docker-compose.yml` (PostgreSQL, Mailpit; MinIO for progress photos is added from slice 2)
+- Dependencies beyond the Initializr set: `spring-boot-starter-validation` (DTO validation), `spring-boot-starter-mail` (verification/reset emails), springdoc-openapi 3.x (Swagger UI for the hand-written contract)
 
 ## Repo layout
 ```
@@ -47,7 +48,7 @@ docs/      domain-model.md, api/openapi.yaml
 
 ## Commands
 - Start DB/storage: `docker compose up -d`
-- Run backend: `cd backend && ./mvnw spring-boot:run`
+- Run backend: `cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local`
 - Backend tests: `cd backend && ./mvnw test`
 - Run Flutter web: `cd app && flutter run -d chrome`
 - Flutter tests: `cd app && flutter test`
