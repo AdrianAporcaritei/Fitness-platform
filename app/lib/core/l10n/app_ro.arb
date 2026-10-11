@@ -1,0 +1,120 @@
+{
+  "@@locale": "ro",
+  "appName": "Ana Fit Lab",
+  "emailLabel": "Email",
+  "passwordLabel": "Parolă",
+  "newPasswordLabel": "Parolă nouă",
+  "confirmPasswordLabel": "Confirmă parola",
+  "firstNameLabel": "Prenume",
+  "lastNameLabel": "Nume",
+  "passwordHint": "10–64 de caractere",
+  "showPassword": "Arată parola",
+  "hidePassword": "Ascunde parola",
+  "goToLogin": "Mergi la autentificare",
+  "goHome": "Mergi la pagina principală",
+  "retry": "Reîncearcă",
+  "cantReachServer": "Nu ne putem conecta la server",
+  "loginTitle": "Conectează-te",
+  "loginButton": "Conectează-te",
+  "forgotPasswordLink": "Ai uitat parola?",
+  "newCoachPrompt": "Antrenor nou?",
+  "createAccountLink": "Creează un cont",
+  "sessionEndedNotice": "Sesiunea ta s-a încheiat. Conectează-te din nou.",
+  "accountSuspendedNotice": "Contul tău este suspendat.",
+  "registerTitle": "Creează-ți contul de antrenor",
+  "registerButton": "Creează cont",
+  "haveAccountPrompt": "Ai deja un cont?",
+  "signInLink": "Conectează-te",
+  "joinTitle": "Te alături antrenamentelor lui {coachName}",
+  "@joinTitle": {
+    "placeholders": {
+      "coachName": {
+        "type": "String"
+      }
+    }
+  },
+  "joinButton": "Creează cont și alătură-te",
+  "joinSignedIn": "Ești conectat ca {email}",
+  "@joinSignedIn": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "joinSignOut": "Deconectează-te pentru a crea un cont nou",
+  "verifyingEmail": "Se confirmă emailul…",
+  "emailConfirmedTitle": "Email confirmat",
+  "emailConfirmedText": "Contul tău este gata.",
+  "forgotTitle": "Resetează-ți parola",
+  "forgotText": "Introdu adresa de email și îți trimitem un link.",
+  "forgotButton": "Trimite linkul de resetare",
+  "forgotSent": "Dacă există un cont pentru acest email, am trimis un link pentru resetarea parolei.",
+  "resetTitle": "Setează o parolă nouă",
+  "resetButton": "Setează parola nouă",
+  "homeGreeting": "Salut, {firstName}",
+  "@homeGreeting": {
+    "placeholders": {
+      "firstName": {
+        "type": "String"
+      }
+    }
+  },
+  "roleCoach": "Antrenor",
+  "roleClient": "Client",
+  "roleAdmin": "Administrator",
+  "signOut": "Deconectează-te",
+  "pendingBanner": "Confirmă-ți emailul – am trimis un link la {email}",
+  "@pendingBanner": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resend": "Retrimite",
+  "resent": "Trimis",
+  "linkInviteExpiredTitle": "Această invitație a expirat",
+  "linkInviteExpiredText": "Cere antrenorului tău una nouă.",
+  "linkInviteUsedTitle": "Această invitație a fost deja folosită",
+  "linkInviteUsedText": "Dacă ai folosit-o tu, conectează-te.",
+  "linkInviteRevokedTitle": "Această invitație nu mai este valabilă",
+  "linkInviteRevokedText": "Cere antrenorului tău una nouă.",
+  "linkInviteNotFoundTitle": "Nu am găsit această invitație",
+  "linkInviteNotFoundText": "Verifică linkul și încearcă din nou.",
+  "linkCoachUnavailableTitle": "Antrenorul tău nu este disponibil momentan",
+  "linkCoachUnavailableText": "Încearcă mai târziu sau contactează-ți antrenorul.",
+  "linkVerifyInvalidTitle": "Acest link de confirmare este invalid sau a expirat",
+  "linkVerifyAlreadyConfirmed": "Emailul tău este deja confirmat.",
+  "linkVerifyResendText": "Îți putem trimite un link nou.",
+  "linkResetInvalidTitle": "Acest link de resetare este invalid sau a expirat",
+  "linkResetAction": "Solicită un link nou",
+  "error_UNKNOWN": "Ceva nu a mers bine. Încearcă din nou.",
+  "error_NETWORK": "Nu ne putem conecta la server. Verifică conexiunea.",
+  "error_INTERNAL_ERROR": "Ceva nu a mers bine din partea noastră. Încearcă din nou mai târziu.",
+  "error_INVALID_CREDENTIALS": "Emailul sau parola sunt incorecte.",
+  "error_ACCOUNT_SUSPENDED": "Contul tău este suspendat.",
+  "error_RATE_LIMITED": "Prea multe încercări. Încearcă din nou peste {minutes} min.",
+  "@error_RATE_LIMITED": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "error_EMAIL_TAKEN": "Există deja un cont cu acest email.",
+  "error_ALREADY_HAS_COACH": "Acest cont are deja un antrenor.",
+  "error_REQUIRED": "Câmp obligatoriu",
+  "error_TOO_LONG": "Prea lung",
+  "error_INVALID_EMAIL": "Introdu un email valid",
+  "error_PASSWORD_POLICY": "Folosește 10–64 de caractere",
+  "error_PASSWORDS_DONT_MATCH": "Parolele nu coincid",
+  "error_INVALID_LOCALE": "Această limbă nu este acceptată.",
+  "error_INVALID_TIMEZONE": "Acest fus orar nu este acceptat.",
+  "error_INVITE_EXPIRED": "Această invitație a expirat.",
+  "error_INVITE_USED": "Această invitație a fost deja folosită.",
+  "error_INVITE_REVOKED": "Această invitație nu mai este valabilă.",
+  "error_INVITE_NOT_FOUND": "Nu am găsit această invitație.",
+  "error_COACH_UNAVAILABLE": "Antrenorul tău nu este disponibil momentan.",
+  "error_INVALID_TOKEN": "Acest link este invalid sau a expirat."
+}
