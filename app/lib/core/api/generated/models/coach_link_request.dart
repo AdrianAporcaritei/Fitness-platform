@@ -9,9 +9,8 @@ part 'coach_link_request.g.dart';
 
 @Freezed()
 abstract class CoachLinkRequest with _$CoachLinkRequest {
-  const factory CoachLinkRequest({
-    required String code,
-  }) = _CoachLinkRequest;
-  
-  factory CoachLinkRequest.fromJson(Map<String, Object?> json) => _$CoachLinkRequestFromJson(json);
+  const factory CoachLinkRequest({required String code}) = _CoachLinkRequest;
+
+  factory CoachLinkRequest.fromJson(Map<String, Object?> json) =>
+      _$CoachLinkRequestFromJson(json);
 }

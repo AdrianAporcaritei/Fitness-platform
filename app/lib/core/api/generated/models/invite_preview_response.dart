@@ -16,6 +16,7 @@ abstract class InvitePreviewResponse with _$InvitePreviewResponse {
     /// Always true; invalid codes are errors.
     required bool valid,
   }) = _InvitePreviewResponse;
-  
-  factory InvitePreviewResponse.fromJson(Map<String, Object?> json) => _$InvitePreviewResponseFromJson(json);
+
+  factory InvitePreviewResponse.fromJson(Map<String, Object?> json) =>
+      _$InvitePreviewResponseFromJson(json);
 }

@@ -19,6 +19,7 @@ abstract class UpdateMeRequest with _$UpdateMeRequest {
     /// IANA time zone name.
     String? timezone,
   }) = _UpdateMeRequest;
-  
-  factory UpdateMeRequest.fromJson(Map<String, Object?> json) => _$UpdateMeRequestFromJson(json);
+
+  factory UpdateMeRequest.fromJson(Map<String, Object?> json) =>
+      _$UpdateMeRequestFromJson(json);
 }

@@ -27,7 +27,10 @@ void main() {
   });
 
   group('validateEmail', () {
-    test('valid trimmed', () => expect(validateEmail(' ana@example.ro '), isNull));
+    test(
+      'valid trimmed',
+      () => expect(validateEmail(' ana@example.ro '), isNull),
+    );
     test('required', () {
       expect(validateEmail('  '), 'REQUIRED');
       expect(validateEmail(null), 'REQUIRED');

@@ -19,6 +19,7 @@ abstract class CoachClientResponse with _$CoachClientResponse {
     required CoachClientResponseStatus status,
     required DateTime startedAt,
   }) = _CoachClientResponse;
-  
-  factory CoachClientResponse.fromJson(Map<String, Object?> json) => _$CoachClientResponseFromJson(json);
+
+  factory CoachClientResponse.fromJson(Map<String, Object?> json) =>
+      _$CoachClientResponseFromJson(json);
 }

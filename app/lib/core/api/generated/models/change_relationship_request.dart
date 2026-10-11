@@ -14,6 +14,7 @@ abstract class ChangeRelationshipRequest with _$ChangeRelationshipRequest {
   const factory ChangeRelationshipRequest({
     required ChangeRelationshipRequestStatus status,
   }) = _ChangeRelationshipRequest;
-  
-  factory ChangeRelationshipRequest.fromJson(Map<String, Object?> json) => _$ChangeRelationshipRequestFromJson(json);
+
+  factory ChangeRelationshipRequest.fromJson(Map<String, Object?> json) =>
+      _$ChangeRelationshipRequestFromJson(json);
 }

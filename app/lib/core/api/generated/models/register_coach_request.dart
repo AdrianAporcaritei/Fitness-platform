@@ -23,6 +23,7 @@ abstract class RegisterCoachRequest with _$RegisterCoachRequest {
     /// IANA time zone name.
     required String timezone,
   }) = _RegisterCoachRequest;
-  
-  factory RegisterCoachRequest.fromJson(Map<String, Object?> json) => _$RegisterCoachRequestFromJson(json);
+
+  factory RegisterCoachRequest.fromJson(Map<String, Object?> json) =>
+      _$RegisterCoachRequestFromJson(json);
 }

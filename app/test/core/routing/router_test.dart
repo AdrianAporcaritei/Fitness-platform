@@ -95,7 +95,6 @@ void main() {
     const anyone = {
       '/verify-email?token=x': 'verify-email',
       '/reset-password?token=x': 'reset-password',
-      '/join/abc': 'join',
     };
     anyone.forEach((location, name) {
       testWidgets('$location reachable signed out', (t) async {
@@ -109,6 +108,24 @@ void main() {
         expect(currentLocation(t), location);
         expect(find.text(name), findsOneWidget);
       });
+    });
+
+    testWidgets('/join/abc reachable signed out', (t) async {
+      final api = FakeApi();
+      api.on(
+        'GET',
+        '/invites/abc',
+        (_) => FakeResponse.problem(404, 'INVITE_NOT_FOUND'),
+      );
+      await pumpApp(t, api: api, initialLocation: '/join/abc');
+      expect(currentLocation(t), '/join/abc');
+      expect(find.text("We couldn't find this invite"), findsOneWidget);
+    });
+
+    testWidgets('/join/abc reachable signed in', (t) async {
+      await _pumpSignedIn(t, '/join/abc');
+      expect(currentLocation(t), '/join/abc');
+      expect(find.text("You're signed in as ana@example.ro"), findsOneWidget);
     });
 
     testWidgets('signing out on /home -> login (router follows auth)', (

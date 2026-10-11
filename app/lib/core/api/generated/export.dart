@@ -43,4 +43,3 @@ export 'models/register_client_request_locale.dart';
 export 'models/coach_link_response_status.dart';
 // Root client
 export 'api_client.dart';
-

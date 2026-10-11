@@ -13,6 +13,7 @@ abstract class UpdateCoachProfileRequest with _$UpdateCoachProfileRequest {
     String? bio,
     List<String>? specializations,
   }) = _UpdateCoachProfileRequest;
-  
-  factory UpdateCoachProfileRequest.fromJson(Map<String, Object?> json) => _$UpdateCoachProfileRequestFromJson(json);
+
+  factory UpdateCoachProfileRequest.fromJson(Map<String, Object?> json) =>
+      _$UpdateCoachProfileRequestFromJson(json);
 }

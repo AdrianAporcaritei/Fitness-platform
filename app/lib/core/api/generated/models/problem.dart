@@ -26,6 +26,7 @@ abstract class Problem with _$Problem {
     /// Present for validation failures.
     List<Errors>? errors,
   }) = _Problem;
-  
-  factory Problem.fromJson(Map<String, Object?> json) => _$ProblemFromJson(json);
+
+  factory Problem.fromJson(Map<String, Object?> json) =>
+      _$ProblemFromJson(json);
 }

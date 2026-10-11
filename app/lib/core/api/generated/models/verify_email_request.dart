@@ -9,9 +9,9 @@ part 'verify_email_request.g.dart';
 
 @Freezed()
 abstract class VerifyEmailRequest with _$VerifyEmailRequest {
-  const factory VerifyEmailRequest({
-    required String token,
-  }) = _VerifyEmailRequest;
-  
-  factory VerifyEmailRequest.fromJson(Map<String, Object?> json) => _$VerifyEmailRequestFromJson(json);
+  const factory VerifyEmailRequest({required String token}) =
+      _VerifyEmailRequest;
+
+  factory VerifyEmailRequest.fromJson(Map<String, Object?> json) =>
+      _$VerifyEmailRequestFromJson(json);
 }

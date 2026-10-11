@@ -13,6 +13,7 @@ abstract class CreateInviteRequest with _$CreateInviteRequest {
     /// Optional note for the coach, such as the prospective client's name.
     String? label,
   }) = _CreateInviteRequest;
-  
-  factory CreateInviteRequest.fromJson(Map<String, Object?> json) => _$CreateInviteRequestFromJson(json);
+
+  factory CreateInviteRequest.fromJson(Map<String, Object?> json) =>
+      _$CreateInviteRequestFromJson(json);
 }

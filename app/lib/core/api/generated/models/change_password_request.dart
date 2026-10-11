@@ -18,6 +18,7 @@ abstract class ChangePasswordRequest with _$ChangePasswordRequest {
     /// Refresh token of the current session; that session is kept.
     required String refreshToken,
   }) = _ChangePasswordRequest;
-  
-  factory ChangePasswordRequest.fromJson(Map<String, Object?> json) => _$ChangePasswordRequestFromJson(json);
+
+  factory ChangePasswordRequest.fromJson(Map<String, Object?> json) =>
+      _$ChangePasswordRequestFromJson(json);
 }

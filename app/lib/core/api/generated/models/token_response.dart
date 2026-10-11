@@ -18,6 +18,7 @@ abstract class TokenResponse with _$TokenResponse {
     required DateTime refreshTokenExpiresAt,
     required UserResponse user,
   }) = _TokenResponse;
-  
-  factory TokenResponse.fromJson(Map<String, Object?> json) => _$TokenResponseFromJson(json);
+
+  factory TokenResponse.fromJson(Map<String, Object?> json) =>
+      _$TokenResponseFromJson(json);
 }
