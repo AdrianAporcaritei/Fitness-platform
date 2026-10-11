@@ -89,6 +89,7 @@ Invitație personală, cu un singur cod, prin care un client se înregistrează 
 - Cod: 10 caractere Crockford base32 (fără `I`, `L`, `O`, `U`), afișat `XXXXX-XXXXX`; normalizat (majuscule, fără liniuțe și spații) înainte de hash. Link: `{APP_BASE_URL}/join/{code}`.
 - Codul în clar se întoarce o singură dată, la creare; nu se stochează.
 - Expirarea se deduce din `expires_at`: API-ul raportează `EXPIRED` pentru o invitație `PENDING` expirată; valoarea nu se stochează.
+- O invitație `PENDING` al cărei coach nu este `ACTIVE` (ex. `SUSPENDED`) nu poate fi folosită: previzualizarea, înregistrarea clientului și legarea întorc `409 COACH_UNAVAILABLE`, iar invitația rămâne `PENDING` (redevine utilizabilă dacă coach-ul e reactivat și invitația n-a expirat).
 
 ### refresh_token
 | Câmp | Tip | Note |
@@ -632,6 +633,11 @@ Se pornește de la decizia „fără reguli GDPR". Totuși, platforma stochează
 3. **Rolul ADMIN:** ce poate face exact? Propunere: gestionare conturi, alimente și exerciții globale, traduceri. Fără acces la datele clienților (poze, măsurători, mesaje). *Slice 1 nu are endpointuri ADMIN* (doar crearea primului ADMIN la pornire, decizia #30); suspendarea / reactivarea se face direct în DB până la slice-ul de administrare.
 4. **Poze de progres:** limite (dimensiune maximă, formate acceptate, număr per client) și regiune de hosting (în UE)?
 5. **Traduceri conținut global:** cine le face la început (seed în ambele limbi pentru alimentele și exercițiile de pornire)?
+6. **Rate limiting în spatele unui proxy (înainte de deploy):** limitele per IP folosesc acum adresa directă a cererii (`ClientIp`), fără headere `X-Forwarded-For`. În spatele unui reverse proxy / load balancer toți utilizatorii ar împărți aceeași limită. La configurarea deploy-ului: `server.forward-headers-strategy` + lista de proxy-uri de încredere.
+7. **Rate limiter în memorie:** contoarele sunt într-un singur proces (o singură instanță, decizia din slice 1). Un atacator cu multe chei distincte poate crește harta și costul curățării. De revăzut împreună cu punctul 6 (limită de dimensiune sau un store partajat, ex. Redis, dacă rulăm mai multe instanțe).
+8. **Blocarea țintită a unui cont:** oricine știe emailul unui utilizator poate consuma limitele per email (login 5/15 min, resetare parolă 3/oră) și îl poate bloca temporar. Opțiuni ulterioare: cheie email + IP, CAPTCHA după câteva eșecuri.
+9. **Refresh fără perioadă de grație:** reutilizarea unui refresh token rotit revocă toată familia (decizia D3). Două taburi sau un retry după timeout deloghează utilizatorul. Propunere: în aplicația Flutter, un singur refresh în curs, partajat între taburi; perioadă de grație pe server doar dacă problema apare în practică.
+10. **Utilizator `SUSPENDED` cu access token valid:** suspendarea blochează login-ul și refresh-ul, dar un access token deja emis rămâne valid până expiră (max. 15 min). De adăugat în slice-ul de administrare o verificare de status per cerere (sau o listă de revocare) dacă 15 minute nu sunt acceptabile.
 
 ---
 
