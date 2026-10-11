@@ -10,7 +10,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.sql.Timestamp;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -177,6 +184,46 @@ class CoachSignupAndLoginTest extends IntegrationTestBase {
 				.andExpect(jsonPath("$.code").value("RATE_LIMITED"));
 		clock.advance(Duration.ofMinutes(15));
 		mockMvc.perform(login("coach@x.test", TestFixtures.PASSWORD)).andExpect(status().isOk());
+	}
+
+	@Test
+	void concurrentWrongPasswordsCannotExceedEmailLimit() throws Exception {
+		fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
+		int attempts = 12;
+		CountDownLatch start = new CountDownLatch(1);
+		ExecutorService pool = Executors.newFixedThreadPool(attempts);
+		List<Integer> statuses = new ArrayList<>();
+		try {
+			List<Future<Integer>> futures = new ArrayList<>();
+			for (int i = 0; i < attempts; i++) {
+				futures.add(pool.submit(() -> {
+					start.await();
+					return mockMvc.perform(login("coach@x.test", "wrong-password-1")).andReturn().getResponse().getStatus();
+				}));
+			}
+			start.countDown();
+			for (Future<Integer> f : futures) {
+				statuses.add(f.get(60, TimeUnit.SECONDS));
+			}
+		}
+		finally {
+			pool.shutdownNow();
+		}
+		// every request is counted before its password is checked, so at most 5 guesses reach bcrypt
+		assertThat(statuses.stream().filter(s -> s == 401).count()).isEqualTo(5);
+		assertThat(statuses.stream().filter(s -> s == 429).count()).isEqualTo(attempts - 5);
+	}
+
+	@Test
+	void successfulLoginsDoNotUseUpAttempts() throws Exception {
+		fixtures.user(Role.COACH, UserStatus.ACTIVE, "coach@x.test");
+		for (int i = 0; i < 25; i++) {
+			mockMvc.perform(login("coach@x.test", TestFixtures.PASSWORD)).andExpect(status().isOk());
+		}
+		for (int i = 0; i < 5; i++) {
+			mockMvc.perform(login("coach@x.test", "wrong-password-1")).andExpect(status().isUnauthorized());
+		}
+		mockMvc.perform(login("coach@x.test", TestFixtures.PASSWORD)).andExpect(status().isTooManyRequests());
 	}
 
 	@Test

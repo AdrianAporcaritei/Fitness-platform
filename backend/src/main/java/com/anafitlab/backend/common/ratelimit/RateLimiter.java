@@ -46,18 +46,11 @@ public class RateLimiter {
 		}
 	}
 
-	/** Throws if the limit is already reached; does not count. */
-	public void ensureUnder(String bucket, String key, Limit limit) {
+	/** Gives back one attempt counted by {@link #hit} in the current window, such as a login that succeeded. */
+	public void refund(String bucket, String key) {
 		Instant now = clock.instant();
-		Window w = windows.get(bucket + ":" + key);
-		if (w != null && w.end().isAfter(now) && w.count() >= limit.max()) {
-			throw exceeded(w, now);
-		}
-	}
-
-	/** Counts one attempt without ever throwing. */
-	public void record(String bucket, String key, Limit limit) {
-		increment(bucket, key, limit, clock.instant());
+		windows.computeIfPresent(bucket + ":" + key, (k, cur) -> cur.end().isAfter(now) && cur.count() > 0
+				? new Window(cur.end(), cur.count() - 1) : cur);
 	}
 
 	public void reset() {

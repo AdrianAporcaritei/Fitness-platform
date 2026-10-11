@@ -16,6 +16,7 @@ import com.anafitlab.backend.auth.dto.TokenResponse;
 import com.anafitlab.backend.client.CoachProfile;
 import com.anafitlab.backend.client.CoachProfileRepository;
 import com.anafitlab.backend.common.error.ApiException;
+import com.anafitlab.backend.common.error.RateLimitedException;
 import com.anafitlab.backend.common.ratelimit.RateLimitProperties;
 import com.anafitlab.backend.common.ratelimit.RateLimiter;
 import com.anafitlab.backend.common.security.CurrentUser;
@@ -25,6 +26,8 @@ public class AuthService {
 
 	/** Shared with password change: wrong passwords count against the same per-email budget. */
 	static final String LOGIN_EMAIL_BUCKET = "login-email";
+
+	private static final String LOGIN_IP_BUCKET = "login-ip";
 
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
@@ -74,16 +77,24 @@ public class AuthService {
 	@Transactional
 	public TokenResponse login(LoginRequest request, String ip) {
 		String email = request.email();
-		rateLimiter.ensureUnder(LOGIN_EMAIL_BUCKET, email, limits.loginEmail().limit());
-		rateLimiter.ensureUnder("login-ip", ip, limits.loginIp().limit());
+		// Count the attempt before the slow password check so parallel guesses cannot all slip under the limit;
+		// a successful login gives the attempt back.
+		rateLimiter.hit(LOGIN_EMAIL_BUCKET, email, limits.loginEmail().limit());
+		try {
+			rateLimiter.hit(LOGIN_IP_BUCKET, ip, limits.loginIp().limit());
+		}
+		catch (RateLimitedException e) {
+			rateLimiter.refund(LOGIN_EMAIL_BUCKET, email);
+			throw e;
+		}
 		AppUser user = users.findByEmail(email).orElse(null);
 		String hash = user != null ? user.getPasswordHash() : dummyHash;
 		boolean matches = passwordEncoder.matches(request.password(), hash);
 		if (user == null || !matches) {
-			rateLimiter.record(LOGIN_EMAIL_BUCKET, email, limits.loginEmail().limit());
-			rateLimiter.record("login-ip", ip, limits.loginIp().limit());
 			throw new ApiException(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS");
 		}
+		rateLimiter.refund(LOGIN_EMAIL_BUCKET, email);
+		rateLimiter.refund(LOGIN_IP_BUCKET, ip);
 		if (user.getStatus() == UserStatus.SUSPENDED) {
 			throw new ApiException(HttpStatus.FORBIDDEN, "ACCOUNT_SUSPENDED");
 		}

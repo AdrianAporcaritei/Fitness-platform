@@ -63,11 +63,11 @@ class RateLimiterTest {
 	void sweepsExpiredEntriesOverThreshold() {
 		RateLimiter small = new RateLimiter(clock, 5);
 		for (int i = 0; i < 6; i++) {
-			small.record("b", "k" + i, LIMIT);
+			small.hit("b", "k" + i, LIMIT);
 		}
 		assertThat(small.size()).isEqualTo(6);
 		clock.advance(Duration.ofMinutes(16));
-		small.record("b", "fresh", LIMIT);
+		small.hit("b", "fresh", LIMIT);
 		assertThat(small.size()).isEqualTo(1);
 	}
 
@@ -117,22 +117,36 @@ class RateLimiterTest {
 	}
 
 	@Test
-	void ensureUnderDoesNotCount() {
-		for (int i = 0; i < 10; i++) {
-			limiter.ensureUnder("login", "a", LIMIT);
-		}
+	void refundGivesBackOneAttempt() {
 		for (int i = 0; i < 3; i++) {
 			limiter.hit("login", "a", LIMIT);
 		}
-		assertThatThrownBy(() -> limiter.ensureUnder("login", "a", LIMIT)).isInstanceOf(RateLimitedException.class);
+		limiter.refund("login", "a");
+		limiter.hit("login", "a", LIMIT);
+		assertThatThrownBy(() -> limiter.hit("login", "a", LIMIT)).isInstanceOf(RateLimitedException.class);
 	}
 
 	@Test
-	void recordIncrementsWithoutThrowing() {
-		for (int i = 0; i < 5; i++) {
-			limiter.record("login", "a", LIMIT);
+	void refundWithoutLiveWindowIsNoOp() {
+		limiter.refund("login", "a");
+		limiter.hit("login", "a", LIMIT);
+		clock.advance(Duration.ofMinutes(15));
+		limiter.refund("login", "a");
+		for (int i = 0; i < 3; i++) {
+			limiter.hit("login", "a", LIMIT);
 		}
-		assertThatThrownBy(() -> limiter.ensureUnder("login", "a", LIMIT)).isInstanceOf(RateLimitedException.class);
+		assertThatThrownBy(() -> limiter.hit("login", "a", LIMIT)).isInstanceOf(RateLimitedException.class);
+	}
+
+	@Test
+	void refundNeverGoesBelowZero() {
+		limiter.hit("login", "a", LIMIT);
+		limiter.refund("login", "a");
+		limiter.refund("login", "a");
+		for (int i = 0; i < 3; i++) {
+			limiter.hit("login", "a", LIMIT);
+		}
+		assertThatThrownBy(() -> limiter.hit("login", "a", LIMIT)).isInstanceOf(RateLimitedException.class);
 	}
 
 	@Test
