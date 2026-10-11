@@ -1,6 +1,6 @@
 # Brainstorm WIP – Frontend: Auth screens (Flutter web)
 
-**Status:** Brainstorming in progress (decisions 1–4 below approved 2026-10-11). No code yet.
+**Status:** Design approved (sections 1–3, 2026-10-11); written spec `docs/superpowers/specs/2026-10-11-frontend-auth-design.md` awaiting user review. No code yet.
 **Process:** superpowers `brainstorming` skill, **architectural** path (there is no `app/` yet: new Flutter project, structure, generated API client, auth flow) → clarifying questions → approaches → screen mockups → design sections → written spec (`docs/superpowers/specs/…`) → user review → `writing-plans`. No code until spec and plan are approved.
 **Backend it builds on:** slice 1 (identity, auth, coach–client linking), merged into `master` (86c64a9, cleanup e626339). Contract: `docs/api/openapi.yaml`.
 
@@ -24,10 +24,11 @@
 
 | # | Topic | Decision |
 |---|---|---|
-| F1 | Missing auth designs | **Derive them from the landing + coach dashboard style** (dark, Poppins, orange accent). Show mockups of the screens for approval **before** any Flutter code. |
+| F1 | Missing auth designs | **Derive them from the landing + coach dashboard style** (dark, Poppins, orange accent). *Revised:* no mockup step and no visual companion – build directly in Flutter; the user reviews the running app (login, coach registration, invitation acceptance, link-problem page) and gives feedback. |
 | F2 | Scope of this piece | **Full auth experience:** login; coach signup; client signup via invite link `/join/{code}` (invite preview "You're joining {coach}'s coaching" + form); verify email page; forgot password + reset page; minimal post-login home placeholder (name, role, logout); "verify your email – resend" banner for `PENDING` users; silent token refresh. Out of scope: coach invites UI, client list, profiles, dashboards. |
 | F3 | Session persistence on web | **Persist the refresh token** (user stays signed in across reloads/restarts, up to 30 days) via `flutter_secure_storage` (web: browser storage; iOS/Android: Keychain/Keystore). Accepted risk: XSS could read it on web; mitigated by no third-party scripts, 15-min access tokens, reuse detection. **Dependency approved.** |
 | F4 | API client generation | **`swagger_parser` + `retrofit` + `freezed`/`json_serializable` on `dio`**, generated from `docs/api/openapi.yaml` into `app/lib/api/generated/`. **Dependencies approved:** runtime `dio`, `retrofit`, `freezed_annotation`, `json_annotation`; dev `swagger_parser`, `build_runner`, `retrofit_generator`, `freezed`, `json_serializable`. Rejected: official `openapi-generator` dart-dio (verbose `built_value`, Java tool in the Flutter build); hand-written client (breaks "generated from the contract"). |
+| F6–F10 | Language, `/` route, theme, `shared_preferences` (approved), cross-tab refresh lock | See spec §2. |
 | F5 | Local tooling | Install Flutter stable into `~/flutter` (WSL). Run web as `flutter run -d web-server --web-port 5173` and open it in the Windows browser (no Chrome needed inside WSL). Tests headless with `flutter test`. |
 
 Already given by `CLAUDE.md` (not re-decided): Flutter web first, Riverpod, go_router, organized by feature, UI strings via localization files (ro/en), `flutter_test`.
@@ -35,21 +36,16 @@ Already given by `CLAUDE.md` (not re-decided): Flutter web first, Riverpod, go_r
 ## 3. Done
 
 - Explored `docs/design/`, toolchain and backend contract (findings above).
-- Decisions F1–F5 approved.
+- Decisions F1–F10 approved; F2 confirmed as the full scope (option A); the expired-link page is one shared `LinkProblemView`.
+- Design sections approved: 1 (defaults, structure, routing), 2 (auth state, tokens, refresh, errors), 3 (theme, localization, testing, tooling).
+- Spec written: `docs/superpowers/specs/2026-10-11-frontend-auth-design.md`.
 
 ## 4. Left to do
 
-1. **Screen mockups** (F1): login, coach signup, join-by-invite, verify email, forgot/reset password, home placeholder with PENDING banner → user approval.
-2. **Remaining open questions** (I will propose defaults):
-   - Language: default from browser locale + ro/en switcher on auth screens? Signup sends the chosen `locale` and the browser timezone?
-   - Landing page: is the Flutter app's `/` the login screen (landing stays a separate static site), or is the landing ported later?
-   - Where "Start free" / "Start your free trial" point (coach signup).
-   - Password rules shown in the UI (mirror backend validation).
-3. **Design sections** (each approved separately): app structure (folders, feature modules); routing and guards (go_router, deep links above); auth state + token storage + refresh (single refresh in flight, 401 → refresh once → retry); error mapping (`code` → localized message, field errors); localization; theming from the design tokens; testing (widget tests per screen, unit tests for the auth/refresh logic, API mocked at the `dio` layer).
-4. Write spec to `docs/superpowers/specs/YYYY-MM-DD-frontend-auth-design.md` → self-review → user review.
-5. `writing-plans` → implementation plan → user chooses execution method → implement on a feature branch.
-6. Before implementing: install Flutter (F5); update `CLAUDE.md` commands (web-server on 5173, API client regeneration command) and list the new dependencies there.
+1. User reviews the written spec.
+2. `writing-plans` → implementation plan → user chooses execution method.
+3. Implement on `feature/frontend-auth` (install Flutter first), then the user reviews the running app and gives feedback on the four key screens.
 
 ## 5. Where we left off
 
-**Resume at:** step 1 of §4 – produce the screen mockups for approval.
+**Resume at:** user review of the spec.
