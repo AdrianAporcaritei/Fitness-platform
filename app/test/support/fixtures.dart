@@ -4,17 +4,16 @@ Map<String, dynamic> userJson({
   String locale = 'en',
   String email = 'ana@example.ro',
   String firstName = 'Ana',
-}) =>
-    {
-      'id': '11111111-1111-1111-1111-111111111111',
-      'email': email,
-      'role': role,
-      'status': status,
-      'firstName': firstName,
-      'lastName': 'Popescu',
-      'locale': locale,
-      'timezone': 'Europe/Bucharest',
-    };
+}) => {
+  'id': '11111111-1111-1111-1111-111111111111',
+  'email': email,
+  'role': role,
+  'status': status,
+  'firstName': firstName,
+  'lastName': 'Popescu',
+  'locale': locale,
+  'timezone': 'Europe/Bucharest',
+};
 
 Map<String, dynamic> tokenJson({
   Map<String, dynamic>? user,
@@ -28,8 +27,9 @@ Map<String, dynamic> tokenJson({
     'accessToken': access,
     'accessTokenExpiresAt': base.add(accessValidFor).toIso8601String(),
     'refreshToken': refresh,
-    'refreshTokenExpiresAt':
-        base.add(const Duration(days: 30)).toIso8601String(),
+    'refreshTokenExpiresAt': base
+        .add(const Duration(days: 30))
+        .toIso8601String(),
     'user': user ?? userJson(),
   };
 }

@@ -41,8 +41,14 @@ void main() {
       locale: RegisterCoachRequestLocale.en,
       timezone: 'Europe/Bucharest',
     ).toJson();
-    expect(json.keys.toSet(),
-        {'email', 'password', 'firstName', 'lastName', 'locale', 'timezone'});
+    expect(json.keys.toSet(), {
+      'email',
+      'password',
+      'firstName',
+      'lastName',
+      'locale',
+      'timezone',
+    });
     expect(json['locale'], 'en');
   });
 }

@@ -90,11 +90,26 @@ void main() {
   });
 
   test('unmatched request fails with method and path', () async {
-    final dio = _dio(FakeApi());
-    expect(
+    final api = FakeApi();
+    final dio = _dio(api);
+    await expectLater(
       () => dio.get<dynamic>('/nope'),
       throwsA(predicate((e) => e.toString().contains('GET /nope'))),
     );
+    api.unmatched.clear(); // expected miss; keep the automatic teardown green
+  });
+
+  test('unmatched request is reported even when app code catches it', () async {
+    final api = FakeApi();
+    final dio = _dio(api);
+    final err = ApiError.fromDio(await _catch(dio, '/me'));
+    expect(err.code, 'NETWORK'); // masked, as app code would see it
+    expect(api.unmatched, ['GET /me']);
+    expect(
+      api.verifyNoUnmatched,
+      throwsA(predicate((e) => e.toString().contains('GET /me'))),
+    );
+    api.unmatched.clear(); // handled here; keep the automatic teardown green
   });
 
   test('toString includes code and status', () {

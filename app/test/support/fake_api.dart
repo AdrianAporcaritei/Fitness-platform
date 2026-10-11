@@ -54,6 +54,17 @@ class FakeResponse {
 
 /// Dio adapter for tests. Paths are matched with the `/api/v1` prefix removed.
 class FakeApi implements HttpClientAdapter {
+  FakeApi() {
+    try {
+      addTearDown(verifyNoUnmatched);
+    } catch (_) {
+      // Constructed outside a test body; callers must verify manually.
+    }
+  }
+
+  /// Every request that had no handler, e.g. `GET /me`.
+  final List<String> unmatched = [];
+
   final Map<String, FakeHandler> _handlers = {};
   final List<RequestOptions> requests = [];
 
@@ -74,6 +85,14 @@ class FakeApi implements HttpClientAdapter {
   static String _strip(String path) =>
       path.startsWith('/api/v1') ? path.substring('/api/v1'.length) : path;
 
+  /// Fails if any request had no registered handler, even when app code
+  /// swallowed the resulting error.
+  void verifyNoUnmatched() {
+    if (unmatched.isNotEmpty) {
+      throw TestFailure('FakeApi: unmatched requests: ${unmatched.join(', ')}');
+    }
+  }
+
   @override
   Future<ResponseBody> fetch(
     RequestOptions options,
@@ -84,6 +103,7 @@ class FakeApi implements HttpClientAdapter {
     final path = _strip(options.uri.path);
     final handler = _handlers[_key(options.method, path)];
     if (handler == null) {
+      unmatched.add(_key(options.method, path));
       throw TestFailure('FakeApi: no handler for ${options.method} $path');
     }
 
