@@ -1,6 +1,5 @@
 package com.anafitlab.backend.auth;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -9,6 +8,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.anafitlab.backend.common.error.ApiException;
+import com.anafitlab.backend.common.error.ConstraintViolations;
 
 /** Creates PENDING accounts. Shared by coach and client signup. */
 @Component
@@ -43,20 +43,11 @@ public class UserRegistrar {
 			return users.saveAndFlush(user);
 		}
 		catch (DataIntegrityViolationException e) {
-			if (violates(e, EMAIL_CONSTRAINT)) {
+			if (ConstraintViolations.violates(e, EMAIL_CONSTRAINT)) {
 				throw emailTaken();
 			}
 			throw e;
 		}
-	}
-
-	private static boolean violates(Throwable e, String constraint) {
-		for (Throwable t = e; t != null; t = t.getCause()) {
-			if (t instanceof ConstraintViolationException cve && constraint.equals(cve.getConstraintName())) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static ApiException emailTaken() {

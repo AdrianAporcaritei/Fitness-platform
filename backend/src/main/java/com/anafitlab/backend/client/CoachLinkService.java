@@ -3,7 +3,6 @@ package com.anafitlab.backend.client;
 import java.time.Clock;
 import java.util.UUID;
 
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -15,6 +14,7 @@ import com.anafitlab.backend.auth.AppUserRepository;
 import com.anafitlab.backend.auth.CurrentUserAccounts;
 import com.anafitlab.backend.client.dto.CoachLinkResponse;
 import com.anafitlab.backend.common.error.ApiException;
+import com.anafitlab.backend.common.error.ConstraintViolations;
 import com.anafitlab.backend.common.ratelimit.RateLimitProperties;
 import com.anafitlab.backend.common.ratelimit.RateLimiter;
 import com.anafitlab.backend.common.security.CurrentUser;
@@ -59,7 +59,7 @@ public class CoachLinkService {
 			link = links.saveAndFlush(link);
 		}
 		catch (DataIntegrityViolationException e) {
-			if (violates(e, CURRENT_COACH_CONSTRAINT)) {
+			if (ConstraintViolations.violates(e, CURRENT_COACH_CONSTRAINT)) {
 				throw alreadyHasCoach();
 			}
 			throw e;
@@ -79,15 +79,6 @@ public class CoachLinkService {
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
 		return new CoachLinkResponse(coach.getId(), coach.getFirstName(), coach.getLastName(), link.getStatus(),
 				link.getStartedAt());
-	}
-
-	private static boolean violates(Throwable e, String constraint) {
-		for (Throwable t = e; t != null; t = t.getCause()) {
-			if (t instanceof ConstraintViolationException cve && constraint.equals(cve.getConstraintName())) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	private static ApiException alreadyHasCoach() {
