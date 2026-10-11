@@ -15,7 +15,6 @@ abstract class PasswordResetConfirmRequest with _$PasswordResetConfirmRequest {
     /// 10-64 characters and at most 72 UTF-8 bytes.
     required String newPassword,
   }) = _PasswordResetConfirmRequest;
-
-  factory PasswordResetConfirmRequest.fromJson(Map<String, Object?> json) =>
-      _$PasswordResetConfirmRequestFromJson(json);
+  
+  factory PasswordResetConfirmRequest.fromJson(Map<String, Object?> json) => _$PasswordResetConfirmRequestFromJson(json);
 }

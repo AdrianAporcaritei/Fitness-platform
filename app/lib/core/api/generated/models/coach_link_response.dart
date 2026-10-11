@@ -18,7 +18,6 @@ abstract class CoachLinkResponse with _$CoachLinkResponse {
     required CoachLinkResponseStatus status,
     required DateTime startedAt,
   }) = _CoachLinkResponse;
-
-  factory CoachLinkResponse.fromJson(Map<String, Object?> json) =>
-      _$CoachLinkResponseFromJson(json);
+  
+  factory CoachLinkResponse.fromJson(Map<String, Object?> json) => _$CoachLinkResponseFromJson(json);
 }

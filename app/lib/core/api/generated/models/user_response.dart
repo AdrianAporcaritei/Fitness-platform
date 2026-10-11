@@ -25,7 +25,6 @@ abstract class UserResponse with _$UserResponse {
     /// IANA time zone name.
     required String timezone,
   }) = _UserResponse;
-
-  factory UserResponse.fromJson(Map<String, Object?> json) =>
-      _$UserResponseFromJson(json);
+  
+  factory UserResponse.fromJson(Map<String, Object?> json) => _$UserResponseFromJson(json);
 }

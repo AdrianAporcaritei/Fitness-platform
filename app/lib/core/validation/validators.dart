@@ -5,8 +5,7 @@ import 'dart:convert';
 
 final _emailShape = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
-String? validateRequired(String? v) =>
-    (v == null || v.isEmpty) ? 'REQUIRED' : null;
+String? validateRequired(String? v) => (v == null || v.isEmpty) ? 'REQUIRED' : null;
 
 String? validateEmail(String? v) {
   final t = v?.trim() ?? '';

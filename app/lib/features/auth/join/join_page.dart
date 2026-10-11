@@ -104,6 +104,7 @@ class _JoinPageState extends ConsumerState<JoinPage> {
     // Set before the call: the session is installed before it returns, and
     // the page must not swap the form for the signed-in notice meanwhile.
     setState(() => _submitting = true);
+    var succeeded = false;
     try {
       await ref
           .read(authControllerProvider.notifier)
@@ -118,14 +119,15 @@ class _JoinPageState extends ConsumerState<JoinPage> {
               timezone: browserTimeZone(),
             ),
           );
+      succeeded = true;
     } on ApiError catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _submitting = false;
-        if (_linkProblemCodes.contains(e.code)) _problem = e.code;
-      });
-      if (_linkProblemCodes.contains(e.code)) return;
+      if (_linkProblemCodes.contains(e.code)) {
+        if (mounted) setState(() => _problem = e.code);
+        return;
+      }
       rethrow;
+    } finally {
+      if (!succeeded && mounted) setState(() => _submitting = false);
     }
     if (!mounted) return;
     context.go(Routes.home);

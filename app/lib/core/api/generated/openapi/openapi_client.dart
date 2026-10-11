@@ -43,13 +43,17 @@ abstract class OpenapiClient {
   ///
   /// Every field is optional; an absent or null field is left unchanged. An empty object changes nothing.
   @PATCH('/me')
-  Future<UserResponse> updateMe({@Body() required UpdateMeRequest body});
+  Future<UserResponse> updateMe({
+    @Body() required UpdateMeRequest body,
+  });
 
   /// Change the password of the authenticated user.
   ///
   /// Revokes every session except the one identified by refreshToken. If refreshToken is not one of the caller's tokens, all sessions are revoked.
   @POST('/me/password')
-  Future<void> changePassword({@Body() required ChangePasswordRequest body});
+  Future<void> changePassword({
+    @Body() required ChangePasswordRequest body,
+  });
 
   /// Sign up as a coach. Creates a PENDING account, sends a verification email and returns a session.
   @POST('/auth/register/coach')
@@ -69,19 +73,27 @@ abstract class OpenapiClient {
   ///
   /// CLIENT only. A PENDING client is allowed. Rate limited per IP (20 per 15 minutes).
   @POST('/me/coach-link')
-  Future<CoachLinkResponse> linkCoach({@Body() required CoachLinkRequest body});
+  Future<CoachLinkResponse> linkCoach({
+    @Body() required CoachLinkRequest body,
+  });
 
   /// Sign in with email and password.
   @POST('/auth/login')
-  Future<TokenResponse> login({@Body() required LoginRequest body});
+  Future<TokenResponse> login({
+    @Body() required LoginRequest body,
+  });
 
   /// Exchange a refresh token for a new session (rotation with reuse detection).
   @POST('/auth/refresh')
-  Future<TokenResponse> refresh({@Body() required RefreshRequest body});
+  Future<TokenResponse> refresh({
+    @Body() required RefreshRequest body,
+  });
 
   /// Revoke the session (token family) of the given refresh token.
   @POST('/auth/logout')
-  Future<void> logout({@Body() required LogoutRequest body});
+  Future<void> logout({
+    @Body() required LogoutRequest body,
+  });
 
   /// Revoke every session of the authenticated user.
   @POST('/auth/logout-all')
@@ -91,7 +103,9 @@ abstract class OpenapiClient {
   ///
   /// Sets email_verified_at. PENDING becomes ACTIVE; SUSPENDED stays SUSPENDED. The token is single use.
   @POST('/auth/verify-email')
-  Future<void> verifyEmail({@Body() required VerifyEmailRequest body});
+  Future<void> verifyEmail({
+    @Body() required VerifyEmailRequest body,
+  });
 
   /// Send a new verification email to the authenticated user.
   ///
@@ -174,5 +188,7 @@ abstract class OpenapiClient {
 
   /// Revoke a pending invite.
   @POST('/coach/invites/{id}/revoke')
-  Future<void> revokeInvite({@Path('id') required String id});
+  Future<void> revokeInvite({
+    @Path('id') required String id,
+  });
 }

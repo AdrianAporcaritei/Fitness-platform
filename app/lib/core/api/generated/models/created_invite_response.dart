@@ -20,7 +20,6 @@ abstract class CreatedInviteResponse with _$CreatedInviteResponse {
     required DateTime expiresAt,
     String? label,
   }) = _CreatedInviteResponse;
-
-  factory CreatedInviteResponse.fromJson(Map<String, Object?> json) =>
-      _$CreatedInviteResponseFromJson(json);
+  
+  factory CreatedInviteResponse.fromJson(Map<String, Object?> json) => _$CreatedInviteResponseFromJson(json);
 }

@@ -9,9 +9,9 @@ part 'password_reset_request.g.dart';
 
 @Freezed()
 abstract class PasswordResetRequest with _$PasswordResetRequest {
-  const factory PasswordResetRequest({required String email}) =
-      _PasswordResetRequest;
-
-  factory PasswordResetRequest.fromJson(Map<String, Object?> json) =>
-      _$PasswordResetRequestFromJson(json);
+  const factory PasswordResetRequest({
+    required String email,
+  }) = _PasswordResetRequest;
+  
+  factory PasswordResetRequest.fromJson(Map<String, Object?> json) => _$PasswordResetRequestFromJson(json);
 }

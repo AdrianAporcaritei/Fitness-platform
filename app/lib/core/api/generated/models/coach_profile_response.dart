@@ -13,7 +13,6 @@ abstract class CoachProfileResponse with _$CoachProfileResponse {
     required List<String> specializations,
     String? bio,
   }) = _CoachProfileResponse;
-
-  factory CoachProfileResponse.fromJson(Map<String, Object?> json) =>
-      _$CoachProfileResponseFromJson(json);
+  
+  factory CoachProfileResponse.fromJson(Map<String, Object?> json) => _$CoachProfileResponseFromJson(json);
 }

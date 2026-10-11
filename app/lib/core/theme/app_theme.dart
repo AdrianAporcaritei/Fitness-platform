@@ -7,9 +7,9 @@ ThemeData buildAppTheme() {
     borderRadius: BorderRadius.circular(AppTokens.radius),
   );
   OutlineInputBorder outline(Color color) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(AppTokens.radius),
-    borderSide: BorderSide(color: color),
-  );
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        borderSide: BorderSide(color: color),
+      );
 
   final scheme = const ColorScheme.dark().copyWith(
     primary: AppTokens.accent,

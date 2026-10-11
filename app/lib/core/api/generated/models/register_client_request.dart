@@ -25,7 +25,6 @@ abstract class RegisterClientRequest with _$RegisterClientRequest {
     /// IANA time zone name.
     required String timezone,
   }) = _RegisterClientRequest;
-
-  factory RegisterClientRequest.fromJson(Map<String, Object?> json) =>
-      _$RegisterClientRequestFromJson(json);
+  
+  factory RegisterClientRequest.fromJson(Map<String, Object?> json) => _$RegisterClientRequestFromJson(json);
 }

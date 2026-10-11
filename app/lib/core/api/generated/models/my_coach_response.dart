@@ -20,7 +20,6 @@ abstract class MyCoachResponse with _$MyCoachResponse {
     required DateTime startedAt,
     String? bio,
   }) = _MyCoachResponse;
-
-  factory MyCoachResponse.fromJson(Map<String, Object?> json) =>
-      _$MyCoachResponseFromJson(json);
+  
+  factory MyCoachResponse.fromJson(Map<String, Object?> json) => _$MyCoachResponseFromJson(json);
 }

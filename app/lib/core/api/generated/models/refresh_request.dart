@@ -9,9 +9,9 @@ part 'refresh_request.g.dart';
 
 @Freezed()
 abstract class RefreshRequest with _$RefreshRequest {
-  const factory RefreshRequest({required String refreshToken}) =
-      _RefreshRequest;
-
-  factory RefreshRequest.fromJson(Map<String, Object?> json) =>
-      _$RefreshRequestFromJson(json);
+  const factory RefreshRequest({
+    required String refreshToken,
+  }) = _RefreshRequest;
+  
+  factory RefreshRequest.fromJson(Map<String, Object?> json) => _$RefreshRequestFromJson(json);
 }

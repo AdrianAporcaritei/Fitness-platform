@@ -19,7 +19,6 @@ abstract class InviteResponse with _$InviteResponse {
     String? label,
     DateTime? usedAt,
   }) = _InviteResponse;
-
-  factory InviteResponse.fromJson(Map<String, Object?> json) =>
-      _$InviteResponseFromJson(json);
+  
+  factory InviteResponse.fromJson(Map<String, Object?> json) => _$InviteResponseFromJson(json);
 }
