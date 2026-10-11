@@ -260,4 +260,20 @@ class ClientSignupTest extends IntegrationTestBase {
 		link(client, "ZZZZZ-ZZZZZ").andExpect(status().isTooManyRequests());
 	}
 
+	@Test
+	void suspendedCoachInviteCannotBeUsed() throws Exception {
+		AppUser coach = activeCoach("coach@x.test");
+		String code = newCode(coach);
+		AppUser client = fixtures.user(Role.CLIENT, UserStatus.ACTIVE, "existing@x.test");
+		jdbc.update("UPDATE app_user SET status = 'SUSPENDED' WHERE id = ?", coach.getId());
+
+		signup(code, "client@x.test").andExpect(status().isConflict())
+			.andExpect(jsonPath("$.code").value("COACH_UNAVAILABLE"));
+		link(client, code).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("COACH_UNAVAILABLE"));
+
+		assertThat(countUsers(Role.CLIENT)).isEqualTo(1);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM coach_client", Integer.class)).isZero();
+		assertThat(inviteStatus()).isEqualTo("PENDING");
+	}
+
 }

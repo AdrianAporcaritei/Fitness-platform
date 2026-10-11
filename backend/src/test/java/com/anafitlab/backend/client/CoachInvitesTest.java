@@ -271,4 +271,13 @@ class CoachInvitesTest extends IntegrationTestBase {
 		assertThat(stored.getUsedAt()).isNotNull();
 	}
 
+	@Test
+	void previewOfSuspendedCoachInviteIsUnavailable() throws Exception {
+		AppUser coach = activeCoach("c@x.test");
+		String code = (String) createOk(coach).get("code");
+		jdbc.update("UPDATE app_user SET status = 'SUSPENDED' WHERE id = ?", coach.getId());
+
+		preview(code).andExpect(status().isConflict()).andExpect(jsonPath("$.code").value("COACH_UNAVAILABLE"));
+	}
+
 }

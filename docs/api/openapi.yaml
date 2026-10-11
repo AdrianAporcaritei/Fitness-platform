@@ -164,7 +164,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '409':
-          description: EMAIL_TAKEN or ALREADY_HAS_COACH.
+          description: EMAIL_TAKEN, ALREADY_HAS_COACH, or COACH_UNAVAILABLE (the inviting coach is not ACTIVE, e.g. suspended).
           content:
             application/problem+json:
               schema:
@@ -226,7 +226,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Problem'
         '409':
-          description: ALREADY_HAS_COACH (ACTIVE or PAUSED relationship exists, also on a concurrent link).
+          description: >
+            ALREADY_HAS_COACH (ACTIVE or PAUSED relationship exists, also on a concurrent link), or COACH_UNAVAILABLE
+            (the inviting coach is not ACTIVE, e.g. suspended).
           content:
             application/problem+json:
               schema:
@@ -485,6 +487,12 @@ paths:
                 $ref: '#/components/schemas/InvitePreviewResponse'
         '404':
           description: INVITE_NOT_FOUND.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: COACH_UNAVAILABLE (the inviting coach is not ACTIVE, e.g. suspended); the invite stays PENDING.
           content:
             application/problem+json:
               schema:

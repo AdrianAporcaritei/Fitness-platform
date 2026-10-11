@@ -102,8 +102,7 @@ public class InviteService {
 		rateLimiter.hit("invite-ip", ip, limits.inviteIp().limit());
 		CoachInvite invite = find(code);
 		requireUsable(invite);
-		AppUser coach = users.findById(invite.getCoachId())
-			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
+		AppUser coach = requireAvailableCoach(invite);
 		return new InvitePreviewResponse(coach.getFirstName(), coach.getLastName(), true);
 	}
 
@@ -117,6 +116,7 @@ public class InviteService {
 		CoachInvite invite = invites.findByCodeHashForUpdate(TokenHasher.sha256(normalized))
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
 		requireUsable(invite);
+		requireAvailableCoach(invite);
 		return invite;
 	}
 
@@ -138,6 +138,16 @@ public class InviteService {
 				}
 			}
 		}
+	}
+
+	/** Invites stay valid while their coach is suspended, but cannot be used until the coach is ACTIVE again. */
+	private AppUser requireAvailableCoach(CoachInvite invite) {
+		AppUser coach = users.findById(invite.getCoachId())
+			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
+		if (coach.getStatus() != UserStatus.ACTIVE) {
+			throw new ApiException(HttpStatus.CONFLICT, "COACH_UNAVAILABLE");
+		}
+		return coach;
 	}
 
 	private CoachInvite find(String code) {
