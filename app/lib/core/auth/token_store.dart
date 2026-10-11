@@ -49,10 +49,20 @@ class SecureTokenStore implements TokenStore {
     );
   }
 
+  /// Never throws: it runs on every sign-out path, which must complete. Each
+  /// key is attempted even if the other fails.
   @override
   Future<void> clear() async {
-    await _storage.delete(key: tokenKey);
-    await _storage.delete(key: expiresAtKey);
+    await _deleteQuietly(tokenKey);
+    await _deleteQuietly(expiresAtKey);
+  }
+
+  Future<void> _deleteQuietly(String key) async {
+    try {
+      await _storage.delete(key: key);
+    } catch (_) {
+      // Unreadable storage is already treated as "no token" by read().
+    }
   }
 }
 
