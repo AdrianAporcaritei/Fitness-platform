@@ -92,7 +92,7 @@ void main() {
       expect(currentLocation(t), '/home');
     });
 
-    const anyone = {'/reset-password?token=x': 'reset-password'};
+    const anyone = {'/reset-password?token=x': 'Set a new password'};
     anyone.forEach((location, name) {
       testWidgets('$location reachable signed out', (t) async {
         await pumpApp(t, initialLocation: location);
