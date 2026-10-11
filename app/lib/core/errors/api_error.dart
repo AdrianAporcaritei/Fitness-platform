@@ -69,3 +69,13 @@ class ApiError implements Exception {
   @override
   String toString() => 'ApiError(code: $code, status: $status)';
 }
+
+/// Runs a generated-client call and rethrows any [DioException] as its
+/// [ApiError] (the interceptor stores it in `DioException.error`).
+Future<T> apiCall<T>(Future<T> Function() call) async {
+  try {
+    return await call();
+  } on DioException catch (e, stack) {
+    Error.throwWithStackTrace(ApiError.fromDio(e), stack);
+  }
+}
