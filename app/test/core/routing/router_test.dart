@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:ana_fit_lab/core/auth/auth_controller.dart';
 import 'package:ana_fit_lab/core/auth/token_store.dart';
 import 'package:ana_fit_lab/core/routing/router.dart';
+import 'package:ana_fit_lab/features/auth/login/login_page.dart';
+import 'package:ana_fit_lab/features/home/home_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -39,14 +41,14 @@ void main() {
     testWidgets('signed out at /home -> login with from', (t) async {
       await pumpApp(t, initialLocation: '/home');
       expect(currentLocation(t), '/login?from=%2Fhome');
-      expect(find.text('login'), findsOneWidget);
+      expect(find.byType(LoginPage), findsOneWidget);
     });
 
     for (final path in ['/login', '/register', '/forgot-password']) {
       testWidgets('signed in at $path -> /home', (t) async {
         await _pumpSignedIn(t, path);
         expect(currentLocation(t), '/home');
-        expect(find.text('home'), findsOneWidget);
+        expect(find.byType(HomePage), findsOneWidget);
       });
     }
 
@@ -145,7 +147,7 @@ void main() {
       refresh.complete(FakeResponse.json(200, tokenJson(now: testNow)));
       await settleAuth(t);
       expect(currentLocation(t), '/home');
-      expect(find.text('home'), findsOneWidget);
+      expect(find.byType(HomePage), findsOneWidget);
     });
 
     testWidgets('unreachable start shows retry; retry recovers', (t) async {
@@ -173,16 +175,16 @@ void main() {
 
   testWidgets('language switch changes the login title and back', (t) async {
     await pumpApp(t, initialLocation: '/login');
-    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Sign in'), findsNWidgets(2));
 
     await t.tap(find.text('RO'));
     await t.pumpAndSettle();
     expect(find.text('Sign in'), findsNothing);
-    expect(find.text('Conectează-te'), findsOneWidget);
+    expect(find.text('Conectează-te'), findsNWidgets(2));
 
     await t.tap(find.text('EN'));
     await t.pumpAndSettle();
-    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Sign in'), findsNWidgets(2));
   });
 
   group('safeFrom', () {
