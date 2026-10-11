@@ -1,6 +1,6 @@
 # Brainstorm WIP – Frontend: Auth screens (Flutter web)
 
-**Status:** Design approved (sections 1–3, 2026-10-11); spec `docs/superpowers/specs/2026-10-11-frontend-auth-design.md` approved; implementation plan `docs/superpowers/plans/2026-10-11-frontend-auth.md` awaiting review. No code yet.
+**Status:** Implementation done on `feature/frontend-auth` (plan Tasks 1–14 except manual E2E and hand-over); awaiting manual E2E and the user's visual review of the running app.
 **Process:** superpowers `brainstorming` skill, **architectural** path (there is no `app/` yet: new Flutter project, structure, generated API client, auth flow) → clarifying questions → approaches → screen mockups → design sections → written spec (`docs/superpowers/specs/…`) → user review → `writing-plans`. No code until spec and plan are approved.
 **Backend it builds on:** slice 1 (identity, auth, coach–client linking), merged into `master` (86c64a9, cleanup e626339). Contract: `docs/api/openapi.yaml`.
 
@@ -40,12 +40,13 @@ Already given by `CLAUDE.md` (not re-decided): Flutter web first, Riverpod, go_r
 - Design sections approved: 1 (defaults, structure, routing), 2 (auth state, tokens, refresh, errors), 3 (theme, localization, testing, tooling).
 - Spec written: `docs/superpowers/specs/2026-10-11-frontend-auth-design.md`.
 
+- Plan `docs/superpowers/plans/2026-10-11-frontend-auth.md` written and implemented on `feature/frontend-auth`: app scaffold, generated API client, auth state and silent refresh, routing, localization, all auth screens, docs. Full verification passed (flutter analyze/test/build web, backend tests).
+
 ## 4. Left to do
 
-1. ~~User reviews the written spec.~~ Approved 2026-10-11. Plan written.
-2. `writing-plans` → implementation plan → user chooses execution method.
-3. Implement on `feature/frontend-auth` (install Flutter first), then the user reviews the running app and gives feedback on the four key screens.
+1. Manual E2E (spec §12) with backend on the `local` profile, app on 5173, Mailpit on 8025.
+2. User reviews login, coach registration, invitation acceptance and the link-problem page; feedback becomes follow-up commits on this branch.
 
 ## 5. Where we left off
 
-**Resume at:** user review of the implementation plan `docs/superpowers/plans/2026-10-11-frontend-auth.md` and choice of execution method.
+**Resume at:** manual E2E + user review of the running app.

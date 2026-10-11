@@ -13,6 +13,7 @@ Web first (Flutter web), then iOS and Android from the same Flutter codebase.
 - Tests: JUnit 5 + Testcontainers (backend), flutter_test (frontend)
 - Local infra: `docker-compose.yml` (PostgreSQL, Mailpit; MinIO for progress photos is added from slice 2)
 - Dependencies beyond the Initializr set: `spring-boot-starter-validation` (DTO validation), `spring-boot-starter-mail` (verification/reset emails), springdoc-openapi 3.x (Swagger UI for the hand-written contract)
+- Frontend dependencies beyond the stack: `dio` (HTTP client, interceptors for auth/refresh), `retrofit` + `freezed` + `json_serializable` (generated API client and models), `swagger_parser` (generates the client from `openapi.yaml`), `build_runner` + `retrofit_generator` (run the code generators), `flutter_secure_storage` (refresh token persistence), `shared_preferences` (language choice), `flutter_web_plugins` (Flutter SDK, path URLs without `#/`)
 
 ## Repo layout
 ```
@@ -22,6 +23,7 @@ docs/      domain-model.md, api/openapi.yaml
 ```
 
 ## Rules
+- `app/lib/core/api/generated/` and `app/lib/core/l10n/app_localizations*.dart` are generated and committed: never hand-edit or reformat them.
 - Schema changes ONLY through Flyway migrations (`backend/src/main/resources/db/migration`, `V<n>__description.sql`). `spring.jpa.hibernate.ddl-auto=validate`. Never edit an already-applied migration; add a new one.
 - Layers: Controller -> Service -> Repository. No business logic in controllers. Controllers use DTOs, never JPA entities.
 - IDs are UUIDs. Timestamps are `timestamptz` in UTC. Units in the DB are metric (kg, cm, g, kcal).
@@ -50,7 +52,8 @@ docs/      domain-model.md, api/openapi.yaml
 - Start DB/storage: `docker compose up -d`
 - Run backend: `cd backend && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local`
 - Backend tests: `cd backend && ./mvnw test`
-- Run Flutter web: `cd app && flutter run -d chrome`
+- Run Flutter web: `cd app && flutter run -d web-server --web-port 5173` (open http://localhost:5173 in the Windows browser; optional `--dart-define=API_BASE_URL=…`, default http://localhost:8080/api/v1)
+- Regenerate API client (after changing `docs/api/openapi.yaml`): `cd app && dart run swagger_parser && dart run build_runner build -d`
 - Flutter tests: `cd app && flutter test`
 
 ## How I want you to work

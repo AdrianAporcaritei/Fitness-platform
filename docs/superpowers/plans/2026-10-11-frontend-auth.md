@@ -62,14 +62,14 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
 **Interfaces:**
 - Produces: `const apiBaseUrl` (config.dart); `final nowProvider = Provider<DateTime Function()>((_) => DateTime.now)`; `final sharedPreferencesProvider = Provider<SharedPreferences>((_) => throw UnimplementedError())`; `abstract final class AppTokens { static const Color background, surface, surface2, surface3, border, borderStrong, text, textMuted, textSubtle, accent, accentHover, onAccent, errorText, errorSurface, errorBorder; static const double radius = 12, radiusSmall = 8; }`; `ThemeData buildAppTheme()`; `class App extends ConsumerWidget` (in app.dart).
 
-- [ ] **Step 1: Install Flutter** – `git clone https://github.com/flutter/flutter.git -b stable ~/flutter`, add `export PATH="$HOME/flutter/bin:$PATH"` to `~/.bashrc`, `flutter config --enable-web`, `flutter doctor`. Expected: Flutter and "Web Server" OK (Android/Chrome/iOS warnings are fine).
-- [ ] **Step 2: Scaffold** – `flutter create app --org com.anafitlab --platforms web,android,ios --project-name ana_fit_lab`; delete the counter demo and `test/widget_test.dart`. `flutter pub add` the runtime packages and `flutter pub add --dev` the dev packages from Global Constraints. Add `flutter: generate: true`, the Poppins font family (400/500/600/700) under `fonts:`. Download Poppins + OFL from the google/fonts GitHub repo (`ofl/poppins/`). `web/index.html`: `<title>Ana Fit Lab</title>`, `theme-color` `#0e0e0f`, body background `#0e0e0f`.
-- [ ] **Step 3: Write the failing test** `app_theme_test.dart`:
+- [x] **Step 1: Install Flutter** – `git clone https://github.com/flutter/flutter.git -b stable ~/flutter`, add `export PATH="$HOME/flutter/bin:$PATH"` to `~/.bashrc`, `flutter config --enable-web`, `flutter doctor`. Expected: Flutter and "Web Server" OK (Android/Chrome/iOS warnings are fine).
+- [x] **Step 2: Scaffold** – `flutter create app --org com.anafitlab --platforms web,android,ios --project-name ana_fit_lab`; delete the counter demo and `test/widget_test.dart`. `flutter pub add` the runtime packages and `flutter pub add --dev` the dev packages from Global Constraints. Add `flutter: generate: true`, the Poppins font family (400/500/600/700) under `fonts:`. Download Poppins + OFL from the google/fonts GitHub repo (`ofl/poppins/`). `web/index.html`: `<title>Ana Fit Lab</title>`, `theme-color` `#0e0e0f`, body background `#0e0e0f`.
+- [x] **Step 3: Write the failing test** `app_theme_test.dart`:
   - `buildAppTheme()` is dark (`brightness == Brightness.dark`), `scaffoldBackgroundColor == Color(0xFF0E0E0F)`, `colorScheme.primary == Color(0xFFFB923C)`, `colorScheme.onPrimary == Color(0xFF1F0D02)`, `colorScheme.error == Color(0xFFFF8A80)`, `textTheme.bodyMedium!.fontFamily == 'Poppins'`.
-- [ ] **Step 4: Run** `cd app && flutter test test/core/theme` – Expected: FAIL (`buildAppTheme` not defined).
-- [ ] **Step 5: Implement** `tokens.dart` with the §11 values and `buildAppTheme()` (Material 3, `fontFamily: 'Poppins'`, `ColorScheme.dark` mapped from tokens, `InputDecorationTheme` filled `surface2` with `border` outline / `accent` focused / `errorBorder` error, `FilledButtonThemeData` accent background + onAccent text, radius 12, height 48). `config.dart`, `time.dart`, `storage.dart` as in Interfaces. `main.dart`: `usePathUrlStrategy()`, `final prefs = await SharedPreferences.getInstance()`, `runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(prefs)], child: const App()))`. `App` temporarily renders `MaterialApp(theme: buildAppTheme(), home: SizedBox())` (router comes in Task 8).
-- [ ] **Step 6: Run** `flutter test && flutter analyze` – Expected: PASS, no issues. `flutter build web` succeeds.
-- [ ] **Step 7: Commit** – `git add .gitignore app && git commit -m "feat(app): Flutter web scaffold, dependencies, dark theme tokens"`
+- [x] **Step 4: Run** `cd app && flutter test test/core/theme` – Expected: FAIL (`buildAppTheme` not defined).
+- [x] **Step 5: Implement** `tokens.dart` with the §11 values and `buildAppTheme()` (Material 3, `fontFamily: 'Poppins'`, `ColorScheme.dark` mapped from tokens, `InputDecorationTheme` filled `surface2` with `border` outline / `accent` focused / `errorBorder` error, `FilledButtonThemeData` accent background + onAccent text, radius 12, height 48). `config.dart`, `time.dart`, `storage.dart` as in Interfaces. `main.dart`: `usePathUrlStrategy()`, `final prefs = await SharedPreferences.getInstance()`, `runApp(ProviderScope(overrides: [sharedPreferencesProvider.overrideWithValue(prefs)], child: const App()))`. `App` temporarily renders `MaterialApp(theme: buildAppTheme(), home: SizedBox())` (router comes in Task 8).
+- [x] **Step 6: Run** `flutter test && flutter analyze` – Expected: PASS, no issues. `flutter build web` succeeds.
+- [x] **Step 7: Commit** – `git add .gitignore app && git commit -m "feat(app): Flutter web scaffold, dependencies, dark theme tokens"`
 
 ### Task 2: Generated API client
 
@@ -80,14 +80,14 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
 **Interfaces:**
 - Produces: one retrofit client class over `Dio` with methods named after the `operationId`s (`login`, `registerCoach`, `registerClient`, `refresh`, `logout`, `verifyEmail`, `resendVerificationEmail`, `requestPasswordReset`, `confirmPasswordReset`, `previewInvite`, `getMe`, …) and freezed models named after the schemas (`TokenResponse`, `UserResponse`, `LoginRequest`, `RegisterCoachRequest`, `RegisterClientRequest`, `RefreshRequest`, `LogoutRequest`, `VerifyEmailRequest`, `PasswordResetRequest`, `PasswordResetConfirmRequest`, `InvitePreviewResponse`). **After generating, write the actual root client class name and the enum type names for `UserResponse.role`/`status`/`locale` into this Interfaces block** (later tasks refer to them as `ApiClient`, `UserRole`, `UserStatus`, `UserLocale`).
 
-- [ ] **Step 1: Configure** `swagger_parser.yaml`: `schema_path: ../docs/api/openapi.yaml`, `output_directory: lib/core/api/generated`, `language: dart`, `json_serializer: freezed`, `root_client: true`, `root_client_name: ApiClient`, `merge_clients: true` (the contract has no tags), `enums_to_json: true`, `unknown_enum_value: true`.
-- [ ] **Step 2: Generate** – `dart run swagger_parser && dart run build_runner build -d`. Expected: no errors; `flutter analyze lib/core/api` clean (add `analyzer: exclude: [lib/core/api/generated/**]` only for lints, not errors). If OpenAPI 3.1 `type: [string, 'null']` is not understood (field generated as non-nullable or as `dynamic`), stop and report – do not edit the contract or generated files.
-- [ ] **Step 3: Write the test** `generated_models_test.dart`:
+- [x] **Step 1: Configure** `swagger_parser.yaml`: `schema_path: ../docs/api/openapi.yaml`, `output_directory: lib/core/api/generated`, `language: dart`, `json_serializer: freezed`, `root_client: true`, `root_client_name: ApiClient`, `merge_clients: true` (the contract has no tags), `enums_to_json: true`, `unknown_enum_value: true`.
+- [x] **Step 2: Generate** – `dart run swagger_parser && dart run build_runner build -d`. Expected: no errors; `flutter analyze lib/core/api` clean (add `analyzer: exclude: [lib/core/api/generated/**]` only for lints, not errors). If OpenAPI 3.1 `type: [string, 'null']` is not understood (field generated as non-nullable or as `dynamic`), stop and report – do not edit the contract or generated files.
+- [x] **Step 3: Write the test** `generated_models_test.dart`:
   - `TokenResponse.fromJson(tokenJson())` round-trips: `user.email`, `user.role` is COACH, `accessTokenExpiresAt` parses as a UTC `DateTime`.
   - `RegisterCoachRequest(...).toJson()` has exactly the keys `email, password, firstName, lastName, locale, timezone` and `locale == 'en'`.
   - Create `test/support/fixtures.dart` here: `Map<String, dynamic> userJson({String role = 'COACH', String status = 'PENDING', String locale = 'en', String email = 'ana@example.ro', String firstName = 'Ana'})`, `Map<String, dynamic> tokenJson({Map<String, dynamic>? user, String access = 'access-1', String refresh = 'refresh-1', Duration accessValidFor = const Duration(minutes: 15), DateTime? now})`.
-- [ ] **Step 4: Run** `flutter test test/core/api` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git add app && git commit -m "feat(app): API client generated from openapi.yaml"`
+- [x] **Step 4: Run** `flutter test test/core/api` – Expected: PASS.
+- [x] **Step 5: Commit** – `git add app && git commit -m "feat(app): API client generated from openapi.yaml"`
 
 ### Task 3: API errors and the fake API
 
@@ -100,15 +100,15 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
   - `class ApiError implements Exception { final int? status; final String code; final List<FieldError> fieldErrors; final Duration? retryAfter; factory ApiError.fromDio(DioException e); String? fieldCode(String field); }`, `record FieldError(String field, String code)` (or a small class). Codes `NETWORK` and `INTERNAL_ERROR` are produced locally.
   - `class FakeApi implements HttpClientAdapter { void on(String method, String path, FakeHandler handler); final List<RequestOptions> requests; int count(String method, String path); }` where `typedef FakeHandler = FutureOr<FakeResponse> Function(RequestOptions r)`; `FakeResponse.json(int status, Object? body)`, `FakeResponse.empty(int status)`, `FakeResponse.problem(int status, String code, {List<Map<String,String>> errors = const [], int? retryAfterSeconds})` (content type `application/problem+json`), `FakeResponse.networkError()` (adapter throws `DioException.connectionError`). `path` is matched against `RequestOptions.uri.path` with the `/api/v1` prefix stripped; an unmatched request fails the test with the method and path in the message. A handler may be a `Completer`-backed future so tests control timing.
 
-- [ ] **Step 1: Write the failing tests** `api_error_test.dart` (use a `Dio` with `FakeApi` and catch the `DioException`):
+- [x] **Step 1: Write the failing tests** `api_error_test.dart` (use a `Dio` with `FakeApi` and catch the `DioException`):
   - 400 problem with `errors: [{field: email, code: INVALID_EMAIL}]` → `status 400`, `code == 'VALIDATION_FAILED'`, `fieldCode('email') == 'INVALID_EMAIL'`.
   - 429 problem with `Retry-After: 120` → `code 'RATE_LIMITED'`, `retryAfter == Duration(seconds: 120)`.
   - `FakeResponse.networkError()` and a receive timeout → `code 'NETWORK'`, `status null`.
   - 500 with `text/html` body `<h1>oops</h1>` → `code 'INTERNAL_ERROR'`, `status 500`.
-- [ ] **Step 2: Run** `flutter test test/core/errors` – Expected: FAIL.
-- [ ] **Step 3: Implement** `ApiError.fromDio` and `FakeApi`. Connection error / timeouts / `unknown` without response → `NETWORK`; a response whose body is not a map with a string `code` → `INTERNAL_ERROR`.
-- [ ] **Step 4: Run** – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): ApiError from problem responses, FakeApi test adapter"`
+- [x] **Step 2: Run** `flutter test test/core/errors` – Expected: FAIL.
+- [x] **Step 3: Implement** `ApiError.fromDio` and `FakeApi`. Connection error / timeouts / `unknown` without response → `NETWORK`; a response whose body is not a map with a string `code` → `INTERNAL_ERROR`.
+- [x] **Step 4: Run** – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): ApiError from problem responses, FakeApi test adapter"`
 
 ### Task 4: Validators
 
@@ -119,15 +119,15 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
 **Interfaces:**
 - Produces: top-level functions returning an error **code** (same codes as the API, so one mapper turns both into text) or `null`: `String? validateRequired(String? v)` → `REQUIRED`; `String? validateEmail(String? v)` → `REQUIRED` / `INVALID_EMAIL` / `TOO_LONG` (>254 after trim); `String? validateName(String? v)` → `REQUIRED` / `TOO_LONG` (>100 after trim); `String? validateNewPassword(String? v)` → `REQUIRED` / `PASSWORD_POLICY`; `String? validatePasswordConfirmation(String? v, String password)` → `REQUIRED` / `PASSWORDS_DONT_MATCH`.
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - password: 9 ASCII chars → `PASSWORD_POLICY`; 10 → null; 64 → null; 65 → `PASSWORD_POLICY`; `'🔥' * 10` (10 code points, 40 bytes) → null; `'🔥' * 19` (76 bytes) → `PASSWORD_POLICY`; `'ă' * 37` (74 bytes) → `PASSWORD_POLICY`; `'ă' * 36` (72 bytes) → null; empty → `REQUIRED`.
   - email: `' ana@example.ro '` → null; `'ana'`, `'ana@'`, `'@x.ro'`, `'a b@x.ro'` → `INVALID_EMAIL`; 255-char valid-shaped address → `TOO_LONG`.
   - name: `'  '` → `REQUIRED`; 100 chars → null; 101 → `TOO_LONG`.
   - confirmation: mismatch → `PASSWORDS_DONT_MATCH`.
-- [ ] **Step 2: Run** `flutter test test/core/validation` – Expected: FAIL.
-- [ ] **Step 3: Implement.** Email shape: `^[^\s@]+@[^\s@]+\.[^\s@]+$` on the trimmed value (the server does the strict check).
-- [ ] **Step 4: Run** – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): client-side validators mirroring the API contract"`
+- [x] **Step 2: Run** `flutter test test/core/validation` – Expected: FAIL.
+- [x] **Step 3: Implement.** Email shape: `^[^\s@]+@[^\s@]+\.[^\s@]+$` on the trimmed value (the server does the strict check).
+- [x] **Step 4: Run** – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): client-side validators mirroring the API contract"`
 
 ### Task 5: Localization, error messages, language
 
@@ -155,14 +155,14 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
   - Link problems: `linkInviteExpiredTitle` "This invite has expired", `linkInviteExpiredText` "Ask your coach for a new one.", `linkInviteUsedTitle` "This invite was already used", `linkInviteUsedText` "If it was you, sign in.", `linkInviteRevokedTitle` "This invite is no longer valid", `linkInviteRevokedText` "Ask your coach for a new one.", `linkInviteNotFoundTitle` "We couldn't find this invite", `linkInviteNotFoundText` "Check the link and try again.", `linkCoachUnavailableTitle` "Your coach isn't available right now", `linkCoachUnavailableText` "Try again later or contact your coach.", `linkVerifyInvalidTitle` "This confirmation link is invalid or has expired", `linkVerifyAlreadyConfirmed` "Your email is already confirmed.", `linkVerifyResendText` "We can send you a new link.", `linkResetInvalidTitle` "This reset link is invalid or has expired", `linkResetAction` "Request a new link".
   - Errors: `error_UNKNOWN` "Something went wrong. Please try again.", `error_NETWORK` "Can't reach the server. Check your connection.", `error_INTERNAL_ERROR`, `error_INVALID_CREDENTIALS` "Email or password is incorrect.", `error_ACCOUNT_SUSPENDED` "Your account is suspended.", `error_RATE_LIMITED(minutes)` "Too many attempts. Try again in {minutes} min.", `error_EMAIL_TAKEN` "An account with this email already exists.", `error_ALREADY_HAS_COACH`, `error_REQUIRED` "Required", `error_TOO_LONG` "Too long", `error_INVALID_EMAIL` "Enter a valid email", `error_PASSWORD_POLICY` "Use 10–64 characters", `error_PASSWORDS_DONT_MATCH` "Passwords don't match", `error_INVALID_LOCALE`, `error_INVALID_TIMEZONE`, plus `error_<CODE>` for `INVITE_EXPIRED`, `INVITE_USED`, `INVITE_REVOKED`, `INVITE_NOT_FOUND`, `COACH_UNAVAILABLE`, `INVALID_TOKEN` (used when such a code appears outside a link-problem page).
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - `error_messages_test`: with `lookupAppLocalizations(Locale('en'))`: `INVALID_CREDENTIALS` → "Email or password is incorrect."; `RATE_LIMITED` with `retryAfter` 61 s → contains "2 min", 10 s → "1 min", null → "1 min"; unknown code `FOO` → `error_UNKNOWN` text; `fieldErrorMessage(l, 'PASSWORD_POLICY')` → "Use 10–64 characters"; with `ro` the `INVALID_CREDENTIALS` text differs from the English one.
   - `locale_controller_test` (prefs via `SharedPreferences.setMockInitialValues`, override `browserLocaleProvider`): saved `ro` + browser `en-US` → `ro`; nothing saved + browser `ro-RO` → `ro`; nothing saved + browser `de-DE` → `en`; `select('ro')` → state `ro` and prefs `locale == 'ro'`; `applyUserLocale('en')` after `select('ro')` → `en` and saved.
   - `arb_parity_test`: decode both ARB files; same set of non-`@` keys; every `error_` key referenced by `errorMessage`'s known-code list exists.
-- [ ] **Step 2: Run** `flutter test test/core` – Expected: FAIL.
-- [ ] **Step 3: Implement.** `errorMessage` is a `switch` over `e.code` to the generated getters (default → `error_UNKNOWN`); minutes = `max(1, (retryAfter.inSeconds / 60).ceil())`. Wire `App` to the delegates and locale. Write `app_ro.arb` translations.
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): en/ro localization, error messages, language choice"`
+- [x] **Step 2: Run** `flutter test test/core` – Expected: FAIL.
+- [x] **Step 3: Implement.** `errorMessage` is a `switch` over `e.code` to the generated getters (default → `error_UNKNOWN`); minutes = `max(1, (retryAfter.inSeconds / 60).ceil())`. Wire `App` to the delegates and locale. Write `app_ro.arb` translations.
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): en/ro localization, error messages, language choice"`
 
 ### Task 6: Token storage, cross-tab lock, refresh coordinator
 
@@ -177,17 +177,17 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
   - `abstract interface class CrossTabLock { Future<T> run<T>(String name, Future<T> Function() action); }`; `CrossTabLock createCrossTabLock()` via conditional import (`if (dart.library.js_interop) 'web_lock_web.dart'`); web: `navigator.locks.request(name, callback)` returning a JS Promise, and if `navigator.locks` is undefined falls back to the in-process lock; stub: in-process mutex (chained futures). `final crossTabLockProvider = Provider<CrossTabLock>((_) => createCrossTabLock())`.
   - `class RefreshCoordinator { RefreshCoordinator({required TokenStore store, required CrossTabLock lock, required Future<TokenResponse> Function(String refreshToken) callRefresh}); Future<TokenResponse> refresh(String usedRefreshToken); }` – throws `ApiError` on failure. Inside the lock: read the store; `null` → throw `ApiError(code: 'INVALID_REFRESH_TOKEN')` (another tab signed out); stored token ≠ `usedRefreshToken` → refresh with the stored one; on success `store.write(new token, expiry)` **before** leaving the lock. Concurrent `refresh` calls while one is in flight return the same `Future`.
 
-- [ ] **Step 1: Write the failing tests** (`MemoryTokenStore`, in-process lock, `callRefresh` backed by a counter / `Completer`):
+- [x] **Step 1: Write the failing tests** (`MemoryTokenStore`, in-process lock, `callRefresh` backed by a counter / `Completer`):
   - `concurrent callers share one refresh`: three `refresh('r1')` calls before completion → `callRefresh` called once, all three get the same `TokenResponse`, store holds `r2`.
   - `second caller after another tab rotated uses the stored token`: store holds `r2` (another tab wrote it), `refresh('r1')` → `callRefresh` called with `r2`, never `r1`.
   - `two coordinators sharing a store and a lock never send the same token twice`: coordinator A and B (simulating two tabs) both call `refresh('r1')` at once → `callRefresh` receives `r1` then `r2`, store ends with `r3`.
   - `failure propagates and the next call retries`: `callRefresh` throws `ApiError('REFRESH_TOKEN_REUSED')` → `refresh` throws it; a later `refresh` invokes `callRefresh` again.
   - `store empty inside the lock` → throws code `INVALID_REFRESH_TOKEN` without calling `callRefresh`.
   - `token_store_test`: `MemoryTokenStore` write/read/clear round-trip (the secure store is covered by the manual E2E).
-- [ ] **Step 2: Run** `flutter test test/core/auth` – Expected: FAIL.
-- [ ] **Step 3: Implement.** `web_lock_web.dart`: `@JS('navigator.locks') external JSObject? get _locks;` and `request(name, ((JSAny lock) => action().then(...).toJS).toJS)`; convert the returned promise with `.toDart`. Keep the JS types confined to this file.
-- [ ] **Step 4: Run** `flutter test && flutter analyze && flutter build web` – Expected: PASS (the build proves the web lock compiles).
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): refresh token store and single-flight cross-tab refresh"`
+- [x] **Step 2: Run** `flutter test test/core/auth` – Expected: FAIL.
+- [x] **Step 3: Implement.** `web_lock_web.dart`: `@JS('navigator.locks') external JSObject? get _locks;` and `request(name, ((JSAny lock) => action().then(...).toJS).toJS)`; convert the returned promise with `.toDart`. Keep the JS types confined to this file.
+- [x] **Step 4: Run** `flutter test && flutter analyze && flutter build web` – Expected: PASS (the build proves the web lock compiles).
+- [x] **Step 5: Commit** – `git commit -m "feat(app): refresh token store and single-flight cross-tab refresh"`
 
 ### Task 7: Auth controller, auth interceptor, API wiring
 
@@ -206,7 +206,7 @@ app/test/support/test_app.dart                pumpApp(): ProviderScope with over
 
 Behaviour (§7): `applySession` keeps the session in memory, writes the refresh token to the store, calls `localeController.applyUserLocale(user.locale)`, sets `SignedIn(user)`. Refresh failures inside `validAccessToken`/`refreshAfterUnauthorized`: `INVALID_REFRESH_TOKEN`/`REFRESH_TOKEN_REUSED` → clear store, `SignedOut(sessionEnded)`; `ACCOUNT_SUSPENDED` → clear, `SignedOut(suspended)`; `NETWORK` → rethrow, session kept. `login` failures leave state unchanged (pages show the error).
 
-- [ ] **Step 1: Write the failing tests** (`ProviderContainer` with `MemoryTokenStore`, in-process lock, `FakeApi`, `nowProvider` fixed):
+- [x] **Step 1: Write the failing tests** (`ProviderContainer` with `MemoryTokenStore`, in-process lock, `FakeApi`, `nowProvider` fixed):
   - `start without a stored token` → `SignedOut(reason: null)`, no request sent.
   - `start with an expired stored token` → `SignedOut`, no request, store cleared.
   - `start with a valid token` → `POST /auth/refresh` with `{refreshToken: r1}` → `SignedIn`, store holds `refresh-1` from the response, locale follows `user.locale`.
@@ -222,10 +222,10 @@ Behaviour (§7): `applySession` keeps the session in memory, writes the refresh 
     - `401 then retry once`: `/me` returns 401 first, 200 second → one refresh, two `/me` requests, call succeeds.
     - `second 401 signs out`: `/me` returns 401 twice → call fails with `ApiError(status 401)`, state `SignedOut(sessionEnded)`, exactly one refresh.
     - two parallel `getMe` calls that both get 401 → exactly one `/auth/refresh`.
-- [ ] **Step 2: Run** `flutter test test/core` – Expected: FAIL.
-- [ ] **Step 3: Implement.** The interceptor reads the controller lazily (`ref.read(authControllerProvider.notifier)` at request time) to avoid a provider cycle; retries use `dio.fetch(options)` with `options.extra['retried'] = true`; errors are converted with `ApiError.fromDio` in `onError` (`handler.reject` keeps the `DioException`, with `error: ApiError`), so callers catch `DioException` → use a helper `Future<T> apiCall<T>(Future<T> Function() f)` in `api_error.dart` that rethrows the `ApiError`. Pages and the controller call the generated client through `apiCall`.
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): auth controller, session refresh and auth interceptor"`
+- [x] **Step 2: Run** `flutter test test/core` – Expected: FAIL.
+- [x] **Step 3: Implement.** The interceptor reads the controller lazily (`ref.read(authControllerProvider.notifier)` at request time) to avoid a provider cycle; retries use `dio.fetch(options)` with `options.extra['retried'] = true`; errors are converted with `ApiError.fromDio` in `onError` (`handler.reject` keeps the `DioException`, with `error: ApiError`), so callers catch `DioException` → use a helper `Future<T> apiCall<T>(Future<T> Function() f)` in `api_error.dart` that rethrows the `ApiError`. Pages and the controller call the generated client through `apiCall`.
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): auth controller, session refresh and auth interceptor"`
 
 ### Task 8: Router, splash and shared widgets
 
@@ -245,7 +245,7 @@ Behaviour (§7): `applySession` keeps the session in memory, writes the refresh 
   - `LinkProblemView({required IconData icon, required String title, required String text, String? actionLabel, VoidCallback? onAction})` – inside `AuthScaffold`.
   - `Future<void> pumpApp(WidgetTester t, {FakeApi? api, TokenStore? store, String initialLocation = '/', Map<String, Object> prefs = const {}, Locale browserLocale = const Locale('en')})` in `test/support/test_app.dart`; returns after `start()` settles. Sets a 1280×900 surface.
 
-- [ ] **Step 1: Write the failing tests** (`router_test`):
+- [x] **Step 1: Write the failing tests** (`router_test`):
   - signed out at `/home` → shows login, location `/login?from=%2Fhome`.
   - signed in at `/login` and `/register` → `/home`.
   - `/` → `/login` signed out, `/home` signed in; unknown `/nope` → `/login` (signed out).
@@ -255,10 +255,10 @@ Behaviour (§7): `applySession` keeps the session in memory, writes the refresh 
   - language switch: on `/login`, tapping `RO` changes the title from "Sign in" to its Romanian text and back with `EN`.
   - `safeFrom`: `/home` → `/home`; `//evil.com`, `https://evil.com`, `home`, `null` → `null`.
   - `link_problem_view_test`: renders title + text; action button only when `actionLabel` is given; tap calls `onAction`.
-- [ ] **Step 2: Run** `flutter test test/core/routing test/core/widgets` – Expected: FAIL.
-- [ ] **Step 3: Implement.** `GoRouter(refreshListenable: …)` with a `ChangeNotifier` that notifies on `authControllerProvider` changes; one `redirect` (§6 guards); `AuthUnknown` → `/loading?to=<encoded location>`, and from `/loading` back to `to` once known.
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): router with auth guards, splash, shared auth widgets"`
+- [x] **Step 2: Run** `flutter test test/core/routing test/core/widgets` – Expected: FAIL.
+- [x] **Step 3: Implement.** `GoRouter(refreshListenable: …)` with a `ChangeNotifier` that notifies on `authControllerProvider` changes; one `redirect` (§6 guards); `AuthUnknown` → `/loading?to=<encoded location>`, and from `/loading` back to `to` once known.
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): router with auth guards, splash, shared auth widgets"`
 
 ### Task 9: Login and home pages
 
@@ -273,13 +273,13 @@ Behaviour (§7): `applySession` keeps the session in memory, writes the refresh 
 Login: §8 fields/links; `AutofillGroup`; Enter in password submits; client validation (`validateRequired` on both — no format check so any server-side `INVALID_CREDENTIALS` stays the single message); errors in `FormErrorBanner` via `errorMessage`; notice banner when the state is `SignedOut(sessionEnded)` / `SignedOut(suspended)`. On success navigate to `safeFrom(from) ?? '/home'`.
 Home: `homeGreeting`, role label, `signOut`; `PENDING` banner with `resend` → `POST /auth/verify-email/resend` → button label `resent` (disabled); `RATE_LIMITED` → `errorMessage` text in the banner.
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - login: empty submit → two `error_REQUIRED` texts and no request; `INVALID_CREDENTIALS` → "Email or password is incorrect."; 429 `Retry-After: 900` → "Try again in 15 min."; success → home shows "Hello, Ana"; `from=/home` honoured; `login ignores external from` (`/login?from=//evil.com` → `/home`); after a forced `SignedOut(sessionEnded)` the login page shows `sessionEndedNotice`; button shows a spinner while the request is pending (`Completer`).
   - home: COACH ACTIVE → "Coach", no banner; CLIENT PENDING → banner with the email; tap Resend → `POST /auth/verify-email/resend` with bearer → "Sent"; 429 → rate-limit text; Sign out → `/login` and `POST /auth/logout`.
-- [ ] **Step 2: Run** `flutter test test/features` – Expected: FAIL.
-- [ ] **Step 3: Implement** both pages.
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): login and home pages"`
+- [x] **Step 2: Run** `flutter test test/features` – Expected: FAIL.
+- [x] **Step 3: Implement** both pages.
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): login and home pages"`
 
 ### Task 10: Coach registration page
 
@@ -292,16 +292,16 @@ Home: `homeGreeting`, role label, `signOut`; `PENDING` banner with `resend` → 
 - Consumes: `AuthController.registerCoach`, `localeControllerProvider`, `browserTimeZone()`.
 - Produces: `SignupForm({required String submitLabel, required Future<void> Function(SignupData) onSubmit})` with `class SignupData { final String firstName, lastName, email, password; }`; the form maps an `ApiError`'s `fieldErrors` (and `EMAIL_TAKEN` → `email`) under the fields, everything else to `FormErrorBanner`. Values are trimmed except the password.
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - client validation: password `short` → "Use 10–64 characters", no request.
   - request body: `{email: 'ana@example.ro', password, firstName: 'Ana', lastName: 'Pop', locale: 'ro', timezone: <browserTimeZone()>}` when the UI language is RO (fields typed with surrounding spaces arrive trimmed).
   - server 400 `errors: [{field: firstName, code: TOO_LONG}, {field: timezone, code: INVALID_TIMEZONE}]` → "Too long" under first name; the time-zone error (no such field) shows in the banner.
   - 409 `EMAIL_TAKEN` → message under the email field.
   - success with a PENDING user → home with the pending banner.
-- [ ] **Step 2: Run** – Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): coach registration page"`
+- [x] **Step 2: Run** – Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): coach registration page"`
 
 ### Task 11: Join (invite) page
 
@@ -315,7 +315,7 @@ Home: `homeGreeting`, role label, `signOut`; `PENDING` banner with `resend` → 
 
 Behaviour: on open, `GET /invites/{code}` (raw code from the URL). Loading → spinner. 200 → `joinTitle('{first} {last}')` + `SignupForm(submitLabel: joinButton)` → `registerClient` with the same `code`. Preview or signup errors with an invite/coach code → `LinkProblemView` per §6 table (`INVITE_USED` → action `goToLogin`); `RATE_LIMITED`/`NETWORK` → `FormErrorBanner` + `retry`. Signed in → `joinSignedIn(email)` + `joinSignOut` button (logout, stays on `/join/:code` and then shows the preview).
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - preview → "You're joining Maria Ionescu's coaching".
   - `join passes the raw code to the API`: `/join/abcde-fghij` → request path `/invites/abcde-fghij`, signup body `code == 'abcde-fghij'`.
   - each of `INVITE_EXPIRED` (410), `INVITE_USED` (410, has "Go to login"), `INVITE_REVOKED` (410), `INVITE_NOT_FOUND` (404), `COACH_UNAVAILABLE` (409) → its title; only `INVITE_USED` has an action.
@@ -323,10 +323,10 @@ Behaviour: on open, `GET /invites/{code}` (raw code from the URL). Loading → s
   - signed in → signed-in text; tapping sign out → preview + form.
   - signup body has `locale` = current UI language and `timezone` = `browserTimeZone()`.
   - success → home ("Hello, …", role Client).
-- [ ] **Step 2: Run** – Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): invite join page with link-problem states"`
+- [x] **Step 2: Run** – Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): invite join page with link-problem states"`
 
 ### Task 12: Verify email page
 
@@ -340,11 +340,11 @@ Behaviour: on open, `GET /invites/{code}` (raw code from the URL). Loading → s
 
 Behaviour: the verify call is started once per page instance in `initState` (stored `Future`); never from `build`. Missing/empty token → invalid variant without a request. Success → if signed in, `reloadUser()` (state becomes ACTIVE); show `emailConfirmedTitle` + button (`goHome` if signed in, else `goToLogin`). `INVALID_TOKEN` → §6 variant by auth state: signed in + PENDING → `linkVerifyResendText` + `resend`; signed in + ACTIVE → `linkVerifyAlreadyConfirmed` + `goHome`; signed out → `goToLogin`.
 
-- [ ] **Step 1: Write the failing tests:** success signed out → "Email confirmed" + "Go to login"; success signed in PENDING → `GET /me` called, then "Go home"; `verify is called once even when auth state changes` (`count('POST', '/auth/verify-email') == 1` after `reloadUser` changes the state and after `pumpAndSettle`); `INVALID_TOKEN` in the three auth variants; resend in the PENDING variant → "Sent"; no token → invalid variant and zero requests.
-- [ ] **Step 2: Run** – Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): email verification page"`
+- [x] **Step 1: Write the failing tests:** success signed out → "Email confirmed" + "Go to login"; success signed in PENDING → `GET /me` called, then "Go home"; `verify is called once even when auth state changes` (`count('POST', '/auth/verify-email') == 1` after `reloadUser` changes the state and after `pumpAndSettle`); `INVALID_TOKEN` in the three auth variants; resend in the PENDING variant → "Sent"; no token → invalid variant and zero requests.
+- [x] **Step 2: Run** – Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): email verification page"`
 
 ### Task 13: Forgot and reset password pages
 
@@ -356,22 +356,22 @@ Behaviour: the verify call is started once per page instance in `initState` (sto
 - Consumes: `apiProvider.requestPasswordReset`, `AuthController.confirmPasswordReset` (applies the returned session, replacing any current one).
 - Produces: `ForgotPasswordPage()`, `ResetPasswordPage({required String? token})`.
 
-- [ ] **Step 1: Write the failing tests:**
+- [x] **Step 1: Write the failing tests:**
   - forgot: invalid email → "Enter a valid email", no request; 202 for any email → `forgotSent` text replaces the form; 429 → rate-limit message; link back to login.
   - reset: mismatch → "Passwords don't match", no request; `PASSWORD_POLICY` client-side; 400 `INVALID_TOKEN` → `linkResetInvalidTitle` + "Request a new link" → `/forgot-password`; 403 `ACCOUNT_SUSPENDED` → banner text; success → home of the returned user; success while another user is signed in → home shows the new user's name and the store holds the new refresh token.
   - missing token → invalid variant, no request.
-- [ ] **Step 2: Run** – Expected: FAIL.
-- [ ] **Step 3: Implement.**
-- [ ] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
-- [ ] **Step 5: Commit** – `git commit -m "feat(app): forgot and reset password pages"`
+- [x] **Step 2: Run** – Expected: FAIL.
+- [x] **Step 3: Implement.**
+- [x] **Step 4: Run** `flutter test && flutter analyze` – Expected: PASS.
+- [x] **Step 5: Commit** – `git commit -m "feat(app): forgot and reset password pages"`
 
 ### Task 14: Docs, full verification, running app for review
 
 **Files:**
 - Modify: `CLAUDE.md` (Commands + Stack/dependencies as §13), `docs/plans/frontend-auth.md` (status, done/left), this plan's checkboxes
 
-- [ ] **Step 1: Update `CLAUDE.md`:** run web `cd app && flutter run -d web-server --web-port 5173` (optional `--dart-define=API_BASE_URL=…`), regenerate client `cd app && dart run swagger_parser && dart run build_runner build -d`, `flutter test`; note that `app/lib/core/api/generated/` is generated and committed; list the frontend dependencies with one-line reasons (§4).
-- [ ] **Step 2: Full verification** – `cd app && flutter analyze && flutter test && flutter build web`; `cd backend && ./mvnw test`. Expected: all pass (backend: 203 tests).
+- [x] **Step 1: Update `CLAUDE.md`:** run web `cd app && flutter run -d web-server --web-port 5173` (optional `--dart-define=API_BASE_URL=…`), regenerate client `cd app && dart run swagger_parser && dart run build_runner build -d`, `flutter test`; note that `app/lib/core/api/generated/` is generated and committed; list the frontend dependencies with one-line reasons (§4).
+- [x] **Step 2: Full verification** – `cd app && flutter analyze && flutter test && flutter build web`; `cd backend && ./mvnw test`. Expected: all pass (backend: 203 tests).
 - [ ] **Step 3: Manual E2E** (§12) with `docker compose up -d`, backend on the `local` profile, app on 5173, Mailpit at `http://localhost:8025`: coach signup → verify via the Mailpit link → login in a second tab (first stays signed in) → reload keeps the session → create an invite in Swagger UI → join as client in a private window → forgot/reset password → open the used invite link (link-problem page). Record any failure as a fix before continuing.
-- [ ] **Step 4: Commit** – `git commit -m "docs: frontend commands, dependencies and status"`
+- [x] **Step 4: Commit** – `git commit -m "docs: frontend commands, dependencies and status"`
 - [ ] **Step 5: Hand over** – leave the app running on `http://localhost:5173` and ask the user to review login, coach registration, invitation acceptance and the link-problem page (§1 item 8). Their feedback becomes follow-up commits on this branch.
