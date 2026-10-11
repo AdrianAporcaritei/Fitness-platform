@@ -88,7 +88,7 @@ public class InviteService {
 
 	@Transactional
 	public void revoke(CurrentUser coach, UUID inviteId) {
-		CoachInvite invite = invites.findByIdAndCoachId(inviteId, coach.id())
+		CoachInvite invite = invites.findByIdAndCoachIdForUpdate(inviteId, coach.id())
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
 		if (!"PENDING".equals(derivedStatus(invite, clock.instant()))) {
 			throw new ApiException(HttpStatus.CONFLICT, "INVITE_NOT_REVOCABLE");

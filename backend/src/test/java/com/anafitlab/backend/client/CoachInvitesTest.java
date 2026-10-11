@@ -14,6 +14,8 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +30,10 @@ import com.anafitlab.backend.auth.Role;
 import com.anafitlab.backend.auth.TokenHasher;
 import com.anafitlab.backend.auth.UserStatus;
 import com.anafitlab.backend.common.error.ApiException;
+import com.anafitlab.backend.common.security.CurrentUser;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.MutableClock;
+import com.anafitlab.backend.support.RowLockRace;
 import com.anafitlab.backend.support.TestFixtures;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -60,6 +64,9 @@ class CoachInvitesTest extends IntegrationTestBase {
 
 	@Autowired
 	TransactionTemplate tx;
+
+	@Autowired
+	DataSource dataSource;
 
 	private AppUser activeCoach(String email) {
 		return fixtures.user(Role.COACH, UserStatus.ACTIVE, email);
@@ -246,6 +253,22 @@ class CoachInvitesTest extends IntegrationTestBase {
 		assertThat(assertThrows(ApiException.class,
 				() -> tx.executeWithoutResult(s -> inviteService.claim("  ")))
 			.code()).isEqualTo("INVITE_NOT_FOUND");
+	}
+
+	@Test
+	void revokeRacingClaimKeepsTheUse() throws Exception {
+		AppUser coach = activeCoach("c@x.test");
+		UUID id = UUID.fromString((String) createOk(coach).get("id"));
+
+		Throwable outcome = RowLockRace.run(dataSource, "SELECT 1 FROM coach_invite WHERE id = ? FOR UPDATE",
+				"UPDATE coach_invite SET status = 'USED', used_at = now() WHERE id = ?", id,
+				() -> inviteService.revoke(new CurrentUser(coach.getId(), Role.COACH), id));
+
+		assertThat(outcome).isInstanceOfSatisfying(ApiException.class,
+				e -> assertThat(e.code()).isEqualTo("INVITE_NOT_REVOCABLE"));
+		CoachInvite stored = invites.findById(id).orElseThrow();
+		assertThat(stored.getStatus()).isEqualTo(InviteStatus.USED);
+		assertThat(stored.getUsedAt()).isNotNull();
 	}
 
 }

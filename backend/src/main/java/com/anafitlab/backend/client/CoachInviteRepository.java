@@ -21,6 +21,8 @@ public interface CoachInviteRepository extends JpaRepository<CoachInvite, UUID> 
 
 	List<CoachInvite> findByCoachIdOrderByCreatedAtDesc(UUID coachId);
 
-	Optional<CoachInvite> findByIdAndCoachId(UUID id, UUID coachId);
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT i FROM CoachInvite i WHERE i.id = :id AND i.coachId = :coachId")
+	Optional<CoachInvite> findByIdAndCoachIdForUpdate(@Param("id") UUID id, @Param("coachId") UUID coachId);
 
 }
