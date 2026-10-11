@@ -62,7 +62,7 @@ ThemeData buildAppTheme() {
       style: FilledButton.styleFrom(
         backgroundColor: AppTokens.accent,
         foregroundColor: AppTokens.onAccent,
-        minimumSize: const Size.fromHeight(48),
+        minimumSize: const Size(64, 48),
         shape: shape,
         textStyle: const TextStyle(
           fontFamily: 'Poppins',

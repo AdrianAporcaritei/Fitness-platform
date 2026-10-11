@@ -13,4 +13,9 @@ void main() {
     expect(theme.colorScheme.error, const Color(0xFFFF8A80));
     expect(theme.textTheme.bodyMedium!.fontFamily, 'Poppins');
   });
+
+  test('FilledButton minimum size is finite (works inside a Row)', () {
+    final style = buildAppTheme().filledButtonTheme.style!;
+    expect(style.minimumSize!.resolve({}), const Size(64, 48));
+  });
 }
