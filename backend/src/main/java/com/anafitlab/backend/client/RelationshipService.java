@@ -49,7 +49,7 @@ public class RelationshipService {
 
 	@Transactional
 	public CoachClientResponse changeStatus(CurrentUser coach, UUID clientId, RelationshipStatus target) {
-		CoachClient link = links.findCurrentByCoachIdAndClientId(coach.id(), clientId)
+		CoachClient link = links.findCurrentByCoachIdAndClientIdForUpdate(coach.id(), clientId)
 				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "CLIENT_NOT_FOUND"));
 		RelationshipTransitions.require(link.getStatus(), target);
 		end(link, target);
@@ -72,7 +72,8 @@ public class RelationshipService {
 
 	@Transactional
 	public void leave(CurrentUser client) {
-		CoachClient link = currentLink(client);
+		CoachClient link = links.findCurrentByClientIdForUpdate(client.id())
+				.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "NO_COACH"));
 		RelationshipTransitions.require(link.getStatus(), RelationshipStatus.ENDED);
 		end(link, RelationshipStatus.ENDED);
 		links.save(link);

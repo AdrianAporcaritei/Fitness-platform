@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import java.util.UUID;
 
+import javax.sql.DataSource;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +23,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import com.anafitlab.backend.auth.AppUser;
 import com.anafitlab.backend.auth.Role;
 import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.common.error.ApiException;
+import com.anafitlab.backend.common.security.CurrentUser;
 import com.anafitlab.backend.support.IntegrationTestBase;
+import com.anafitlab.backend.support.RowLockRace;
 import com.anafitlab.backend.support.TestFixtures;
 
 class RelationshipsTest extends IntegrationTestBase {
@@ -37,6 +42,16 @@ class RelationshipsTest extends IntegrationTestBase {
 
 	@Autowired
 	CoachProfileRepository profiles;
+
+	@Autowired
+	RelationshipService relationships;
+
+	@Autowired
+	DataSource dataSource;
+
+	private static final String LOCK_LINK = "SELECT 1 FROM coach_client WHERE id = ? FOR UPDATE";
+
+	private static final String END_LINK = "UPDATE coach_client SET status = 'ENDED', ended_at = now() WHERE id = ?";
 
 	private AppUser coach(String email) {
 		return fixtures.user(Role.COACH, UserStatus.ACTIVE, email);
@@ -209,6 +224,39 @@ class RelationshipsTest extends IntegrationTestBase {
 			.andExpect(status().isForbidden());
 		mockMvc.perform(delete("/api/v1/me/coach").header(HttpHeaders.AUTHORIZATION, bearer))
 			.andExpect(status().isForbidden());
+	}
+
+	@Test
+	void pauseRacingClientLeaveDoesNotReviveRelationship() throws Exception {
+		AppUser coach = coach("c@x.test");
+		AppUser client = client("a@x.test");
+		UUID linkId = fixtures.link(coach, client, RelationshipStatus.ACTIVE).getId();
+
+		Throwable outcome = RowLockRace.run(dataSource, LOCK_LINK, END_LINK, linkId,
+				() -> relationships.changeStatus(new CurrentUser(coach.getId(), Role.COACH), client.getId(),
+						RelationshipStatus.PAUSED));
+
+		assertThat(outcome).isInstanceOfSatisfying(ApiException.class,
+				e -> assertThat(e.code()).isEqualTo("CLIENT_NOT_FOUND"));
+		assertThat(jdbc.queryForObject("SELECT status FROM coach_client WHERE id = ?", String.class, linkId))
+			.isEqualTo("ENDED");
+		assertThat(jdbc.queryForObject("SELECT ended_at IS NOT NULL FROM coach_client WHERE id = ?", Boolean.class,
+				linkId)).isTrue();
+	}
+
+	@Test
+	void leaveRacingCoachEndSeesTheEndedRelationship() throws Exception {
+		AppUser coach = coach("c@x.test");
+		AppUser client = client("a@x.test");
+		UUID linkId = fixtures.link(coach, client, RelationshipStatus.ACTIVE).getId();
+
+		Throwable outcome = RowLockRace.run(dataSource, LOCK_LINK, END_LINK, linkId,
+				() -> relationships.leave(new CurrentUser(client.getId(), Role.CLIENT)));
+
+		assertThat(outcome).isInstanceOfSatisfying(ApiException.class,
+				e -> assertThat(e.code()).isEqualTo("NO_COACH"));
+		assertThat(jdbc.queryForObject("SELECT status FROM coach_client WHERE id = ?", String.class, linkId))
+			.isEqualTo("ENDED");
 	}
 
 }
