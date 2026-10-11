@@ -172,6 +172,27 @@ void main() {
     });
   });
 
+  test(
+    'start: 403 with a non-JSON body keeps the token (unreachable)',
+    () async {
+      final api = FakeApi()
+        ..on(
+          'POST',
+          '/auth/refresh',
+          (_) => FakeResponse.html(403, '<html>Forbidden</html>'),
+        );
+      final store = MemoryTokenStore();
+      await store.write('r1', _future);
+      final c = await makeContainer(api: api, store: store);
+      await _auth(c).start();
+      expect(
+        c.read(authControllerProvider),
+        const AuthUnknown(unreachable: true),
+      );
+      expect((await store.read())!.token, 'r1');
+    },
+  );
+
   group('login', () {
     test('success -> SignedIn with the response session', () async {
       Object? sent;
@@ -422,6 +443,73 @@ void main() {
       expect(await store.read(), isNull);
       expect(_auth(c).session, isNull);
       expect(c.read(authControllerProvider), const SignedOut());
+    });
+  });
+
+  test('in-session refresh: 403 with a non-JSON body rethrows, session '
+      'and token kept', () async {
+    final api = FakeApi()
+      ..on(
+        'POST',
+        '/auth/refresh',
+        (_) => FakeResponse.html(403, '<html>Forbidden</html>'),
+      );
+    final store = MemoryTokenStore();
+    final c = await makeContainer(api: api, store: store);
+    await _auth(c)
+        .applySession(_token(accessValidFor: const Duration(seconds: 30)));
+    await expectLater(
+      _auth(c).validAccessToken(),
+      throwsA(_apiError('INTERNAL_ERROR')),
+    );
+    expect(c.read(authControllerProvider), isA<SignedIn>());
+    expect(_auth(c).session, isNotNull);
+    expect((await store.read())!.token, 'refresh-1');
+  });
+
+  group('user locale', () {
+    test('a refresh of the same user keeps a manual language choice', () async {
+      final api = FakeApi()
+        ..on(
+          'POST',
+          '/auth/refresh',
+          (_) => FakeResponse.json(
+            200,
+            tokenJson(now: _now, access: 'access-2', refresh: 'refresh-2'),
+          ),
+        );
+      final c = await makeContainer(api: api);
+      await _auth(c)
+          .applySession(_token(accessValidFor: const Duration(seconds: 30)));
+      expect(c.read(localeControllerProvider), const Locale('en'));
+
+      c.read(localeControllerProvider.notifier).select('ro');
+      expect(await _auth(c).validAccessToken(), 'access-2');
+      expect(c.read(localeControllerProvider), const Locale('ro'));
+    });
+
+    test('login applies the user locale', () async {
+      final api = FakeApi()
+        ..on(
+          'POST',
+          '/auth/login',
+          (_) => FakeResponse.json(200, tokenJson(now: _now)),
+        );
+      final c = await makeContainer(api: api, prefs: {'locale': 'ro'});
+      await _auth(c).start();
+      expect(c.read(localeControllerProvider), const Locale('ro'));
+      await _auth(c).login('ana@example.ro', 'secret-password');
+      expect(c.read(localeControllerProvider), const Locale('en'));
+    });
+
+    test('a different user signing in applies their locale', () async {
+      final c = await makeContainer(api: FakeApi());
+      await _auth(c).applySession(_token());
+      c.read(localeControllerProvider.notifier).select('en');
+      final other = userJson(locale: 'ro')
+        ..['id'] = '22222222-2222-2222-2222-222222222222';
+      await _auth(c).applySession(_token(user: other));
+      expect(c.read(localeControllerProvider), const Locale('ro'));
     });
   });
 

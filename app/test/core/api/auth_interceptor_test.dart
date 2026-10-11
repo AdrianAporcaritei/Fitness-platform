@@ -48,6 +48,13 @@ String? _auth(FakeApi api, String path) =>
         as String?;
 
 void main() {
+  test('dio uses 10 s connect and 20 s receive timeouts', () async {
+    final c = await makeContainer(api: FakeApi());
+    final options = c.read(dioProvider).options;
+    expect(options.connectTimeout, const Duration(seconds: 10));
+    expect(options.receiveTimeout, const Duration(seconds: 20));
+  });
+
   test('getMe carries Bearer token and Accept-Language', () async {
     final api = FakeApi()
       ..on('GET', '/me', (_) => FakeResponse.json(200, userJson()));

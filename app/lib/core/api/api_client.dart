@@ -22,6 +22,8 @@ final dioProvider = Provider<Dio>((ref) {
       baseUrl: apiBaseUrl,
       contentType: Headers.jsonContentType,
       responseType: ResponseType.json,
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 20),
     ),
   );
   final adapter = ref.watch(httpAdapterProvider);

@@ -98,7 +98,8 @@ class AuthController extends Notifier<AuthState> {
     await applySession(response);
   }
 
-  /// Access token in memory, refresh token persisted, user locale applied,
+  /// Access token in memory, refresh token persisted, user locale applied when
+  /// entering SignedIn (new sign-in or different user),
   /// `SignedIn(user)`.
   Future<void> applySession(TokenResponse response) async {
     _install(response);
@@ -111,9 +112,14 @@ class AuthController extends Notifier<AuthState> {
   }
 
   void _install(TokenResponse response) {
+    final previous = state;
     _session = Session.from(response);
+    // The account language applies when entering SignedIn (or switching
+    // user), not on routine refreshes: those would undo a manual choice.
+    final entering =
+        previous is! SignedIn || previous.user.id != response.user.id;
     final locale = response.user.locale.json;
-    if (locale != null) {
+    if (entering && locale != null) {
       ref.read(localeControllerProvider.notifier).applyUserLocale(locale);
     }
     state = SignedIn(response.user);
@@ -204,7 +210,7 @@ class AuthController extends Notifier<AuthState> {
     state = SignedOut(reason: reason);
   }
 
-  /// `null` → transient (network/server), keep the session.
+  /// `null` → transient (network/server/unparseable), keep the session.
   static SignedOutReason? _terminalReason(ApiError e) {
     switch (e.code) {
       case 'ACCOUNT_SUSPENDED':
@@ -213,6 +219,9 @@ class AuthController extends Notifier<AuthState> {
       case 'REFRESH_TOKEN_REUSED':
         return SignedOutReason.sessionEnded;
     }
+    // INTERNAL_ERROR covers non-problem bodies (e.g. a proxy/CDN 403 page):
+    // transient, never a reason to drop the stored token.
+    if (e.code == 'INTERNAL_ERROR' || e.code == 'NETWORK') return null;
     if (e.status == 401 || e.status == 403) return SignedOutReason.sessionEnded;
     return null;
   }
