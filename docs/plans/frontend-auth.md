@@ -1,6 +1,6 @@
 # Brainstorm WIP – Frontend: Auth screens (Flutter web)
 
-**Status:** Implementation done on `feature/frontend-auth` (plan Tasks 1–14 except manual E2E and hand-over); awaiting manual E2E and the user's visual review of the running app.
+**Status:** Implementation done on `feature/frontend-auth` (plan Tasks 1–14); E2E passed 2026-10-12; awaiting the user's visual review of the running app.
 **Process:** superpowers `brainstorming` skill, **architectural** path (there is no `app/` yet: new Flutter project, structure, generated API client, auth flow) → clarifying questions → approaches → screen mockups → design sections → written spec (`docs/superpowers/specs/…`) → user review → `writing-plans`. No code until spec and plan are approved.
 **Backend it builds on:** slice 1 (identity, auth, coach–client linking), merged into `master` (86c64a9, cleanup e626339). Contract: `docs/api/openapi.yaml`.
 
@@ -44,9 +44,9 @@ Already given by `CLAUDE.md` (not re-decided): Flutter web first, Riverpod, go_r
 
 ## 4. Left to do
 
-1. Manual E2E (spec §12) with backend on the `local` profile, app on 5173, Mailpit on 8025.
+1. ~~Manual E2E~~ done 2026-10-12: 26/26 checks against the running stack (`local` profile, Mailpit). Checks ran at API level (no browser in WSL): signup → PENDING → verify via the Mailpit link → ACTIVE; used verify link rejected; second-tab login while the first session still refreshes; rotated refresh token reuse rejected; invite link `/join/{code}`, preview names the coach, client joins, used invite → 410 `INVITE_USED`; forgot/reset via the Mailpit link, old password rejected, reset link single-use; the app serves `/verify-email`, `/reset-password`, `/join/…`, `/login`, `/register` as path URLs; CORS preflight from 5173 OK.
 2. User reviews login, coach registration, invitation acceptance and the link-problem page; feedback becomes follow-up commits on this branch.
 
 ## 5. Where we left off
 
-**Resume at:** manual E2E + user review of the running app.
+**Resume at:** user review of the running app (in-browser pass); feedback → follow-up commits.
