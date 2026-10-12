@@ -44,7 +44,7 @@
 |---|---|
 | 1 | done |
 | 2 | done (223 backend tests green) |
-| 3 | pending |
+| 3 | done |
 | 4 | pending |
 | 5 | pending |
 | 6 | pending |

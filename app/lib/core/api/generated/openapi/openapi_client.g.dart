@@ -443,12 +443,23 @@ class _OpenapiClient implements OpenapiClient {
   }
 
   @override
-  Future<List<CoachClientResponse>> listClients() async {
+  Future<ClientListPage> listClients({
+    int? page = 0,
+    int? size = 20,
+    String? q,
+    ClientListStatus? status,
+  }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'size': size,
+      r'q': q,
+      r'status': status?.toJson(),
+    };
+    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<CoachClientResponse>>(
+    final _options = _setStreamType<ClientListPage>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -458,15 +469,40 @@ class _OpenapiClient implements OpenapiClient {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<CoachClientResponse> _value;
+    final _result = await _dio.fetch<Map<String, Object?>>(_options);
+    late ClientListPage _value;
     try {
-      _value = _result.data!
-          .map(
-            (dynamic i) =>
-                CoachClientResponse.fromJson(i as Map<String, dynamic>),
+      _value = ClientListPage.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options, response: _result);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<InvitationLinkResponse> addClient({
+    required AddClientRequest body,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    final _data = <String, dynamic>{};
+    _data.addAll(body.toJson());
+    final _options = _setStreamType<InvitationLinkResponse>(
+      Options(method: 'POST', headers: _headers, extra: _extra)
+          .compose(
+            _dio.options,
+            '/coach/clients',
+            queryParameters: queryParameters,
+            data: _data,
           )
-          .toList();
+          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
+    );
+    final _result = await _dio.fetch<Map<String, Object?>>(_options);
+    late InvitationLinkResponse _value;
+    try {
+      _value = InvitationLinkResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
@@ -563,29 +599,27 @@ class _OpenapiClient implements OpenapiClient {
   }
 
   @override
-  Future<CreatedInviteResponse> createInvite({
-    CreateInviteRequest? body,
+  Future<InvitationLinkResponse> regenerateInvitation({
+    required String id,
   }) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
-    queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
-    final _data = <String, dynamic>{};
-    _data.addAll(body?.toJson() ?? <String, dynamic>{});
-    final _options = _setStreamType<CreatedInviteResponse>(
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<InvitationLinkResponse>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/coach/invites',
+            '/coach/invites/${id}/regenerate',
             queryParameters: queryParameters,
             data: _data,
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
     final _result = await _dio.fetch<Map<String, Object?>>(_options);
-    late CreatedInviteResponse _value;
+    late InvitationLinkResponse _value;
     try {
-      _value = CreatedInviteResponse.fromJson(_result.data!);
+      _value = InvitationLinkResponse.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
@@ -594,47 +628,16 @@ class _OpenapiClient implements OpenapiClient {
   }
 
   @override
-  Future<List<InviteResponse>> listInvites() async {
-    final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
-    final _headers = <String, dynamic>{};
-    const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<InviteResponse>>(
-      Options(method: 'GET', headers: _headers, extra: _extra)
-          .compose(
-            _dio.options,
-            '/coach/invites',
-            queryParameters: queryParameters,
-            data: _data,
-          )
-          .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
-    );
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<InviteResponse> _value;
-    try {
-      _value = _result.data!
-          .map(
-            (dynamic i) => InviteResponse.fromJson(i as Map<String, dynamic>),
-          )
-          .toList();
-    } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options, response: _result);
-      rethrow;
-    }
-    return _value;
-  }
-
-  @override
-  Future<void> revokeInvite({required String id}) async {
+  Future<void> cancelInvitation({required String id}) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<void>(
-      Options(method: 'POST', headers: _headers, extra: _extra)
+      Options(method: 'DELETE', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
-            '/coach/invites/${id}/revoke',
+            '/coach/invites/${id}',
             queryParameters: queryParameters,
             data: _data,
           )

@@ -5,16 +5,17 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 
+import '../models/add_client_request.dart';
 import '../models/change_password_request.dart';
 import '../models/change_relationship_request.dart';
+import '../models/client_list_page.dart';
+import '../models/client_list_status.dart';
 import '../models/coach_client_response.dart';
 import '../models/coach_link_request.dart';
 import '../models/coach_link_response.dart';
 import '../models/coach_profile_response.dart';
-import '../models/create_invite_request.dart';
-import '../models/created_invite_response.dart';
+import '../models/invitation_link_response.dart';
 import '../models/invite_preview_response.dart';
-import '../models/invite_response.dart';
 import '../models/login_request.dart';
 import '../models/logout_request.dart';
 import '../models/my_coach_response.dart';
@@ -149,9 +150,28 @@ abstract class OpenapiClient {
   @DELETE('/me/coach')
   Future<void> leaveCoach();
 
-  /// The coach's current clients (ACTIVE and PAUSED), ordered by last name then first name.
+  /// The coach's clients and pending invitations, paginated, ordered by name.
+  ///
+  /// One row per invited client (pending invitation, including expired ones) and per linked client. Without `status`, INVITED, ACTIVE and PAUSED rows are returned. ENDED rows are returned only with `status=ENDED`: one row per former client (most recent relationship), never for a client who is currently linked to this coach. Invitation codes and links are never returned.
+  ///
+  /// [q] - Case-insensitive substring of the name or email.
+  ///
+  /// [page] - Zero-based page index.
   @GET('/coach/clients')
-  Future<List<CoachClientResponse>> listClients();
+  Future<ClientListPage> listClients({
+    @Query('page') int? page = 0,
+    @Query('size') int? size = 20,
+    @Query('q') String? q,
+    @Query('status') ClientListStatus? status,
+  });
+
+  /// Add a client by creating a single-use invitation (valid 7 days) with the client's name and email.
+  ///
+  /// No email is sent; the coach shares the returned link. The code and link are returned only in this response; only the code's hash is stored.
+  @POST('/coach/clients')
+  Future<InvitationLinkResponse> addClient({
+    @Body() required AddClientRequest body,
+  });
 
   /// Pause, resume or end the relationship with a client.
   ///
@@ -174,21 +194,17 @@ abstract class OpenapiClient {
     @Body() required UpdateCoachProfileRequest body,
   });
 
-  /// Create a single-use invite code (valid 7 days).
+  /// Replace the code of a pending (possibly expired) invitation and extend it by 7 days.
   ///
-  /// The code is returned only in this response; only its hash is stored. The body is optional.
-  @POST('/coach/invites')
-  Future<CreatedInviteResponse> createInvite({
-    @Body() CreateInviteRequest? body,
+  /// The old link stops working. The new code and link are returned only in this response.
+  @POST('/coach/invites/{id}/regenerate')
+  Future<InvitationLinkResponse> regenerateInvitation({
+    @Path('id') required String id,
   });
 
-  /// The coach's invites, newest first. Codes are never returned.
-  @GET('/coach/invites')
-  Future<List<InviteResponse>> listInvites();
-
-  /// Revoke a pending invite.
-  @POST('/coach/invites/{id}/revoke')
-  Future<void> revokeInvite({
+  /// Cancel a pending (possibly expired) invitation.
+  @DELETE('/coach/invites/{id}')
+  Future<void> cancelInvitation({
     @Path('id') required String id,
   });
 }
