@@ -45,7 +45,7 @@
 | 1 | done |
 | 2 | done (223 backend tests green) |
 | 3 | done |
-| 4 | pending |
-| 5 | pending |
-| 6 | pending |
+| 4 | done |
+| 5 | done |
+| 6 | done (225 Flutter tests green) |
 | 7 | pending |

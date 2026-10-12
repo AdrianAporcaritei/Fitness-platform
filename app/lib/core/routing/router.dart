@@ -8,7 +8,11 @@ import '../../features/auth/password_reset/forgot_password_page.dart';
 import '../../features/auth/password_reset/reset_password_page.dart';
 import '../../features/auth/register_coach/register_coach_page.dart';
 import '../../features/auth/verify_email/verify_email_page.dart';
+import '../../features/coach/clients/clients_page.dart';
+import '../../features/coach/clients/client_list_query.dart';
+import '../../features/coach/shell/coach_shell.dart';
 import '../../features/home/home_page.dart';
+import '../api/generated/export.dart';
 import '../auth/auth_controller.dart';
 import 'splash_page.dart';
 
@@ -22,6 +26,7 @@ abstract final class Routes {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
   static const home = '/home';
+  static const coachClients = '/coach/clients';
 
   /// `/login?from=<location>`, the target after sign-in.
   static String loginFrom(String from) =>
@@ -29,7 +34,7 @@ abstract final class Routes {
 }
 
 const _signedOutOnly = {Routes.login, Routes.register, Routes.forgotPassword};
-const _signedInOnly = {Routes.home};
+const _signedInOnly = {Routes.home, Routes.coachClients};
 const _known = {
   Routes.root,
   Routes.loading,
@@ -39,6 +44,7 @@ const _known = {
   Routes.forgotPassword,
   Routes.resetPassword,
   Routes.home,
+  Routes.coachClients,
 };
 final _joinPath = RegExp(r'^/join/[^/]+$');
 
@@ -88,6 +94,12 @@ String? authRedirect(AuthState auth, Uri uri) {
   if (!signedIn && _signedInOnly.contains(path)) {
     return Routes.loginFrom(uri.toString());
   }
+  if (auth is SignedIn) {
+    // Coaches work in the coach area; everyone else stays out of it.
+    final isCoach = auth.user.role == UserResponseRole.coach;
+    if (isCoach && path == Routes.home) return Routes.coachClients;
+    if (!isCoach && path.startsWith('/coach/')) return Routes.home;
+  }
   return null;
 }
 
@@ -136,6 +148,17 @@ final routerProvider = Provider<GoRouter>((ref) {
             ResetPasswordPage(token: s.uri.queryParameters['token']),
       ),
       GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
+      ShellRoute(
+        builder: (_, s, child) =>
+            CoachShell(location: s.uri.path, child: child),
+        routes: [
+          GoRoute(
+            path: Routes.coachClients,
+            builder: (_, s) =>
+                ClientsPage(query: ClientListQuery.fromUri(s.uri)),
+          ),
+        ],
+      ),
     ],
   );
   ref.onDispose(() {

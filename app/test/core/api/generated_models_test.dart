@@ -6,7 +6,12 @@ import '../../support/fixtures.dart';
 void main() {
   test('TokenResponse parses the contract JSON', () {
     final now = DateTime.utc(2026, 1, 1, 12);
-    final t = TokenResponse.fromJson(tokenJson(now: now));
+    final t = TokenResponse.fromJson(
+      tokenJson(
+        now: now,
+        user: userJson(role: 'COACH'),
+      ),
+    );
     expect(t.user.email, 'ana@example.ro');
     expect(t.user.role, UserResponseRole.coach);
     expect(t.user.status, UserResponseStatus.pending);

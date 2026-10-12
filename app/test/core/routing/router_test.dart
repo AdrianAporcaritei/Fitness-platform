@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ana_fit_lab/core/auth/auth_controller.dart';
 import 'package:ana_fit_lab/core/auth/token_store.dart';
 import 'package:ana_fit_lab/core/routing/router.dart';
+import 'package:ana_fit_lab/features/coach/clients/clients_page.dart';
 import 'package:ana_fit_lab/features/auth/login/login_page.dart';
 import 'package:ana_fit_lab/features/home/home_page.dart';
 import 'package:flutter/material.dart';
@@ -14,23 +15,41 @@ import '../../support/fixtures.dart';
 import '../../support/test_app.dart';
 
 /// A stored refresh token plus a `/auth/refresh` handler: start() signs in.
-Future<MemoryTokenStore> _signedInStore(FakeApi api) async {
+Future<MemoryTokenStore> _signedInStore(
+  FakeApi api, {
+  String role = 'CLIENT',
+}) async {
   final store = MemoryTokenStore();
   await store.write('r1', testNow.add(const Duration(days: 10)));
   api.on(
     'POST',
     '/auth/refresh',
-    (_) => FakeResponse.json(200, tokenJson(now: testNow)),
+    (_) => FakeResponse.json(
+      200,
+      tokenJson(
+        now: testNow,
+        user: userJson(role: role),
+      ),
+    ),
   );
   return store;
 }
 
-Future<FakeApi> _pumpSignedIn(WidgetTester t, String location) async {
+Future<FakeApi> _pumpSignedIn(
+  WidgetTester t,
+  String location, {
+  String role = 'CLIENT',
+}) async {
   final api = FakeApi();
+  api.on(
+    'GET',
+    '/coach/clients',
+    (_) => FakeResponse.json(200, clientPageJson()),
+  );
   await pumpApp(
     t,
     api: api,
-    store: await _signedInStore(api),
+    store: await _signedInStore(api, role: role),
     initialLocation: location,
   );
   return api;
@@ -163,6 +182,34 @@ void main() {
       expect(currentLocation(t), '/login?from=%2Fhome');
       // Created once: auth changes refresh it, never rebuild it.
       expect(appContainer(t).read(routerProvider), same(router));
+    });
+  });
+
+  group('coach area', () {
+    for (final path in ['/', '/home', '/login']) {
+      testWidgets('coach signed in at $path -> /coach/clients', (t) async {
+        await _pumpSignedIn(t, path, role: 'COACH');
+        expect(currentLocation(t), '/coach/clients');
+        expect(find.byType(ClientsPage), findsOneWidget);
+      });
+    }
+
+    testWidgets('coach deep link keeps the list query', (t) async {
+      await _pumpSignedIn(t, '/coach/clients?status=invited', role: 'COACH');
+      expect(currentLocation(t), '/coach/clients?status=invited');
+    });
+
+    for (final role in ['CLIENT', 'ADMIN']) {
+      testWidgets('$role at /coach/clients -> /home', (t) async {
+        final api = await _pumpSignedIn(t, '/coach/clients', role: role);
+        expect(currentLocation(t), '/home');
+        expect(api.count('GET', '/coach/clients'), 0);
+      });
+    }
+
+    testWidgets('signed out at /coach/clients -> login with from', (t) async {
+      await pumpApp(t, initialLocation: '/coach/clients?q=ana');
+      expect(currentLocation(t), '/login?from=%2Fcoach%2Fclients%3Fq%3Dana');
     });
   });
 

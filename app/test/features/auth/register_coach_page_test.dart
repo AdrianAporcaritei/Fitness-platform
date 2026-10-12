@@ -30,7 +30,19 @@ FakeApi _apiOk() {
   api.on(
     'POST',
     '/auth/register/coach',
-    (_) => FakeResponse.json(201, tokenJson(now: testNow)),
+    (_) => FakeResponse.json(
+      201,
+      tokenJson(
+        now: testNow,
+        user: userJson(role: 'COACH'),
+      ),
+    ),
+  );
+  // A new coach lands on the (empty) client list.
+  api.on(
+    'GET',
+    '/coach/clients',
+    (_) => FakeResponse.json(200, clientPageJson()),
   );
   return api;
 }
@@ -60,7 +72,11 @@ void main() {
     await _fill(t, first: ' Ana ', last: ' Pop ', email: '  ana@example.ro ');
     await t.tap(find.byType(FilledButton));
     await t.pumpAndSettle();
-    final body = api.requests.last.data as Map;
+    final body =
+        api.requests
+                .firstWhere((r) => r.path.endsWith('/auth/register/coach'))
+                .data
+            as Map;
     expect(body, {
       'email': 'ana@example.ro',
       'password': 'secret-password',
@@ -137,17 +153,18 @@ void main() {
     );
   });
 
-  testWidgets('success with a PENDING user lands on home with banner', (
-    t,
-  ) async {
-    await pumpApp(t, api: _apiOk(), initialLocation: '/register');
-    await _fill(t);
-    await _submit(t);
-    expect(currentLocation(t), '/home');
-    expect(find.text('Hello, Ana'), findsOneWidget);
-    expect(
-      find.text('Confirm your email – we sent a link to ana@example.ro'),
-      findsOneWidget,
-    );
-  });
+  testWidgets(
+    'success with a PENDING coach lands on the client list with banner',
+    (t) async {
+      await pumpApp(t, api: _apiOk(), initialLocation: '/register');
+      await _fill(t);
+      await _submit(t);
+      expect(currentLocation(t), '/coach/clients');
+      expect(find.text('No clients yet'), findsOneWidget);
+      expect(
+        find.text('Confirm your email – we sent a link to ana@example.ro'),
+        findsOneWidget,
+      );
+    },
+  );
 }

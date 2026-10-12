@@ -18,6 +18,11 @@ abstract final class AppTokens {
   static const Color errorSurface = Color(0xFF2A1215);
   static const Color errorBorder = Color(0xFF5C2B2E);
 
+  /// Client status badges (coach client list).
+  static const Color success = Color(0xFF62CB86);
+  static const Color successSurface = Color(0xFF15261B);
+  static const Color accentSurface = Color(0xFF2B1D10);
+
   static const double radius = 12;
   static const double radiusSmall = 8;
 }

@@ -1,5 +1,5 @@
 Map<String, dynamic> userJson({
-  String role = 'COACH',
+  String role = 'CLIENT',
   String status = 'PENDING',
   String locale = 'en',
   String email = 'ana@example.ro',
@@ -31,5 +31,39 @@ Map<String, dynamic> tokenJson({
         .add(const Duration(days: 30))
         .toIso8601String(),
     'user': user ?? userJson(),
+  };
+}
+
+Map<String, dynamic> clientItemJson({
+  String id = '22222222-2222-2222-2222-222222222222',
+  String? name = 'Maria Pavel',
+  String? email = 'maria@example.ro',
+  String status = 'ACTIVE',
+  String? invitedAt = '2026-10-01T09:00:00Z',
+  String? invitationExpiresAt,
+  bool invitationExpired = false,
+}) => {
+  'id': id,
+  'name': name,
+  'email': email,
+  'status': status,
+  'invitedAt': invitedAt,
+  'invitationExpiresAt': invitationExpiresAt,
+  'invitationExpired': invitationExpired,
+};
+
+Map<String, dynamic> clientPageJson({
+  List<Map<String, dynamic>> items = const [],
+  int page = 0,
+  int size = 20,
+  int? totalItems,
+}) {
+  final total = totalItems ?? items.length;
+  return {
+    'items': items,
+    'page': page,
+    'size': size,
+    'totalItems': total,
+    'totalPages': (total + size - 1) ~/ size,
   };
 }
