@@ -1,0 +1,11 @@
+swagger_parser:
+  schema_path: ../docs/api/openapi.yaml
+  output_directory: lib/core/api/generated
+  language: dart
+  json_serializer: freezed
+  root_client: true
+  root_client_name: ApiClient
+  merge_clients: true
+  enums_to_json: true
+  unknown_enum_value: true
+  use_freezed3: true

@@ -1,0 +1,120 @@
+{
+  "@@locale": "en",
+  "appName": "Ana Fit Lab",
+  "emailLabel": "Email",
+  "passwordLabel": "Password",
+  "newPasswordLabel": "New password",
+  "confirmPasswordLabel": "Confirm password",
+  "firstNameLabel": "First name",
+  "lastNameLabel": "Last name",
+  "passwordHint": "10–64 characters",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "goToLogin": "Go to login",
+  "goHome": "Go home",
+  "retry": "Retry",
+  "cantReachServer": "Can't reach the server",
+  "loginTitle": "Sign in",
+  "loginButton": "Sign in",
+  "forgotPasswordLink": "Forgot password?",
+  "newCoachPrompt": "New coach?",
+  "createAccountLink": "Create an account",
+  "sessionEndedNotice": "Your session ended. Please sign in again.",
+  "accountSuspendedNotice": "Your account is suspended.",
+  "registerTitle": "Create your coach account",
+  "registerButton": "Create account",
+  "haveAccountPrompt": "Already have an account?",
+  "signInLink": "Sign in",
+  "joinTitle": "You're joining {coachName}'s coaching",
+  "@joinTitle": {
+    "placeholders": {
+      "coachName": {
+        "type": "String"
+      }
+    }
+  },
+  "joinButton": "Create account and join",
+  "joinSignedIn": "You're signed in as {email}",
+  "@joinSignedIn": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "joinSignOut": "Sign out to create a new account",
+  "verifyingEmail": "Confirming your email…",
+  "emailConfirmedTitle": "Email confirmed",
+  "emailConfirmedText": "Your account is ready.",
+  "forgotTitle": "Reset your password",
+  "forgotText": "Enter your email and we'll send you a link.",
+  "forgotButton": "Send reset link",
+  "forgotSent": "If an account exists for that email, we've sent a link to reset the password.",
+  "resetTitle": "Set a new password",
+  "resetButton": "Set new password",
+  "homeGreeting": "Hello, {firstName}",
+  "@homeGreeting": {
+    "placeholders": {
+      "firstName": {
+        "type": "String"
+      }
+    }
+  },
+  "roleCoach": "Coach",
+  "roleClient": "Client",
+  "roleAdmin": "Admin",
+  "signOut": "Sign out",
+  "pendingBanner": "Confirm your email – we sent a link to {email}",
+  "@pendingBanner": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "resend": "Resend",
+  "resent": "Sent",
+  "linkInviteExpiredTitle": "This invite has expired",
+  "linkInviteExpiredText": "Ask your coach for a new one.",
+  "linkInviteUsedTitle": "This invite was already used",
+  "linkInviteUsedText": "If it was you, sign in.",
+  "linkInviteRevokedTitle": "This invite is no longer valid",
+  "linkInviteRevokedText": "Ask your coach for a new one.",
+  "linkInviteNotFoundTitle": "We couldn't find this invite",
+  "linkInviteNotFoundText": "Check the link and try again.",
+  "linkCoachUnavailableTitle": "Your coach isn't available right now",
+  "linkCoachUnavailableText": "Try again later or contact your coach.",
+  "linkVerifyInvalidTitle": "This confirmation link is invalid or has expired",
+  "linkVerifyAlreadyConfirmed": "Your email is already confirmed.",
+  "linkVerifyResendText": "We can send you a new link.",
+  "linkResetInvalidTitle": "This reset link is invalid or has expired",
+  "linkResetAction": "Request a new link",
+  "error_UNKNOWN": "Something went wrong. Please try again.",
+  "error_NETWORK": "Can't reach the server. Check your connection.",
+  "error_INTERNAL_ERROR": "Something went wrong on our side. Please try again later.",
+  "error_INVALID_CREDENTIALS": "Email or password is incorrect.",
+  "error_ACCOUNT_SUSPENDED": "Your account is suspended.",
+  "error_RATE_LIMITED": "Too many attempts. Try again in {minutes} min.",
+  "@error_RATE_LIMITED": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "error_EMAIL_TAKEN": "An account with this email already exists.",
+  "error_ALREADY_HAS_COACH": "This account already has a coach.",
+  "error_REQUIRED": "Required",
+  "error_TOO_LONG": "Too long",
+  "error_INVALID_EMAIL": "Enter a valid email",
+  "error_PASSWORD_POLICY": "Use 10–64 characters",
+  "error_PASSWORDS_DONT_MATCH": "Passwords don't match",
+  "error_INVALID_LOCALE": "This language is not supported.",
+  "error_INVALID_TIMEZONE": "This time zone is not supported.",
+  "error_INVITE_EXPIRED": "This invite has expired.",
+  "error_INVITE_USED": "This invite was already used.",
+  "error_INVITE_REVOKED": "This invite is no longer valid.",
+  "error_INVITE_NOT_FOUND": "We couldn't find this invite.",
+  "error_COACH_UNAVAILABLE": "Your coach isn't available right now.",
+  "error_INVALID_TOKEN": "This link is invalid or has expired."
+}

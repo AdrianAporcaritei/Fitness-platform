@@ -1,0 +1,35 @@
+Map<String, dynamic> userJson({
+  String role = 'COACH',
+  String status = 'PENDING',
+  String locale = 'en',
+  String email = 'ana@example.ro',
+  String firstName = 'Ana',
+}) => {
+  'id': '11111111-1111-1111-1111-111111111111',
+  'email': email,
+  'role': role,
+  'status': status,
+  'firstName': firstName,
+  'lastName': 'Popescu',
+  'locale': locale,
+  'timezone': 'Europe/Bucharest',
+};
+
+Map<String, dynamic> tokenJson({
+  Map<String, dynamic>? user,
+  String access = 'access-1',
+  String refresh = 'refresh-1',
+  Duration accessValidFor = const Duration(minutes: 15),
+  DateTime? now,
+}) {
+  final base = (now ?? DateTime.now()).toUtc();
+  return {
+    'accessToken': access,
+    'accessTokenExpiresAt': base.add(accessValidFor).toIso8601String(),
+    'refreshToken': refresh,
+    'refreshTokenExpiresAt': base
+        .add(const Duration(days: 30))
+        .toIso8601String(),
+    'user': user ?? userJson(),
+  };
+}
