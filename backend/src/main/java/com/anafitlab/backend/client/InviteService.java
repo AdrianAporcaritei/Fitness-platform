@@ -3,7 +3,6 @@ package com.anafitlab.backend.client;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -16,9 +15,8 @@ import com.anafitlab.backend.auth.AppUserRepository;
 import com.anafitlab.backend.auth.CurrentUserAccounts;
 import com.anafitlab.backend.auth.TokenHasher;
 import com.anafitlab.backend.auth.UserStatus;
-import com.anafitlab.backend.client.dto.CreatedInviteResponse;
+import com.anafitlab.backend.client.dto.InvitationLinkResponse;
 import com.anafitlab.backend.client.dto.InvitePreviewResponse;
-import com.anafitlab.backend.client.dto.InviteResponse;
 import com.anafitlab.backend.common.AppProperties;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.common.ratelimit.RateLimitProperties;
@@ -33,6 +31,7 @@ public class InviteService {
 	private static final int MAX_GENERATION_ATTEMPTS = 3;
 
 	private final CoachInviteRepository invites;
+	private final CoachClientRepository links;
 	private final AppUserRepository users;
 	private final CurrentUserAccounts accounts;
 	private final RateLimiter rateLimiter;
@@ -40,9 +39,10 @@ public class InviteService {
 	private final Clock clock;
 	private final AppProperties app;
 
-	InviteService(CoachInviteRepository invites, AppUserRepository users, CurrentUserAccounts accounts,
+	InviteService(CoachInviteRepository invites, CoachClientRepository links, AppUserRepository users, CurrentUserAccounts accounts,
 			RateLimiter rateLimiter, RateLimitProperties limits, Clock clock, AppProperties app) {
 		this.invites = invites;
+		this.links = links;
 		this.users = users;
 		this.accounts = accounts;
 		this.rateLimiter = rateLimiter;
@@ -51,48 +51,45 @@ public class InviteService {
 		this.app = app;
 	}
 
+	/**
+	 * Adds a client by creating a pending invite for them. Duplicates are checked only within the coach's own
+	 * data, so the response never reveals other coaches' clients or invites.
+	 */
 	@Transactional
-	public CreatedInviteResponse create(CurrentUser coach, String label) {
-		AppUser account = accounts.require(coach);
-		if (account.getStatus() != UserStatus.ACTIVE) {
-			throw new ApiException(HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED");
-		}
-		for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
-			String code = InviteCodes.generate();
-			String hash = TokenHasher.sha256(code);
-			if (invites.findByCodeHash(hash).isPresent()) {
-				continue;
-			}
-			CoachInvite invite = new CoachInvite();
-			invite.setCoachId(account.getId());
-			invite.setCodeHash(hash);
-			invite.setLabel(label == null || label.isBlank() ? null : label.strip());
-			invite.setStatus(InviteStatus.PENDING);
-			invite.setExpiresAt(clock.instant().plus(VALIDITY));
-			invite = invites.save(invite);
-			String display = InviteCodes.display(code);
-			return new CreatedInviteResponse(invite.getId(), display,
-					app.baseUrlWithoutTrailingSlash() + "/join/" + display, invite.getLabel(), invite.getExpiresAt());
-		}
-		throw new IllegalStateException("Could not generate a unique invite code");
-	}
-
-	@Transactional(readOnly = true)
-	public List<InviteResponse> list(CurrentUser coach) {
+	public InvitationLinkResponse create(CurrentUser coach, String name, String email) {
+		AppUser account = requireVerifiedCoach(coach);
 		Instant now = clock.instant();
-		return invites.findByCoachIdOrderByCreatedAtDesc(coach.id()).stream()
-			.map(i -> new InviteResponse(i.getId(), i.getLabel(), derivedStatus(i, now), i.getCreatedAt(),
-					i.getExpiresAt(), i.getUsedAt()))
-			.toList();
+		if (invites.existsPendingByCoachIdAndEmail(account.getId(), email, now)) {
+			throw new ApiException(HttpStatus.CONFLICT, "INVITE_ALREADY_PENDING");
+		}
+		boolean alreadyClient = users.findByEmail(email)
+			.flatMap(user -> links.findCurrentByCoachIdAndClientId(account.getId(), user.getId()))
+			.isPresent();
+		if (alreadyClient) {
+			throw new ApiException(HttpStatus.CONFLICT, "ALREADY_YOUR_CLIENT");
+		}
+		CoachInvite invite = new CoachInvite();
+		invite.setCoachId(account.getId());
+		invite.setLabel(name);
+		invite.setEmail(email);
+		invite.setStatus(InviteStatus.PENDING);
+		String code = assignNewCode(invite, now);
+		return linkResponse(invites.save(invite), code);
 	}
 
+	/** Gives a pending (possibly expired) invite a new code and a new 7-day validity; the old code stops working. */
 	@Transactional
-	public void revoke(CurrentUser coach, UUID inviteId) {
-		CoachInvite invite = invites.findByIdAndCoachIdForUpdate(inviteId, coach.id())
-			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
-		if (!"PENDING".equals(derivedStatus(invite, clock.instant()))) {
-			throw new ApiException(HttpStatus.CONFLICT, "INVITE_NOT_REVOCABLE");
-		}
+	public InvitationLinkResponse regenerate(CurrentUser coach, UUID inviteId) {
+		requireVerifiedCoach(coach);
+		CoachInvite invite = requirePendingOwnInvite(coach, inviteId);
+		String code = assignNewCode(invite, clock.instant());
+		return linkResponse(invites.save(invite), code);
+	}
+
+	/** Cancels a pending (possibly expired) invite. */
+	@Transactional
+	public void cancel(CurrentUser coach, UUID inviteId) {
+		CoachInvite invite = requirePendingOwnInvite(coach, inviteId);
 		invite.setStatus(InviteStatus.REVOKED);
 		invites.save(invite);
 	}
@@ -159,11 +156,42 @@ public class InviteService {
 			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
 	}
 
-	private static String derivedStatus(CoachInvite invite, Instant now) {
-		if (invite.getStatus() == InviteStatus.PENDING && !invite.getExpiresAt().isAfter(now)) {
-			return "EXPIRED";
+	private AppUser requireVerifiedCoach(CurrentUser coach) {
+		AppUser account = accounts.require(coach);
+		if (account.getStatus() != UserStatus.ACTIVE) {
+			throw new ApiException(HttpStatus.FORBIDDEN, "EMAIL_NOT_VERIFIED");
 		}
-		return invite.getStatus().name();
+		return account;
+	}
+
+	private CoachInvite requirePendingOwnInvite(CurrentUser coach, UUID inviteId) {
+		CoachInvite invite = invites.findByIdAndCoachIdForUpdate(inviteId, coach.id())
+			.orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "INVITE_NOT_FOUND"));
+		if (invite.getStatus() != InviteStatus.PENDING) {
+			throw new ApiException(HttpStatus.CONFLICT, "INVITE_NOT_PENDING");
+		}
+		return invite;
+	}
+
+	/** Sets a new unique code hash and expiry on the invite and returns the plain code (normalized form). */
+	private String assignNewCode(CoachInvite invite, Instant now) {
+		for (int attempt = 0; attempt < MAX_GENERATION_ATTEMPTS; attempt++) {
+			String code = InviteCodes.generate();
+			String hash = TokenHasher.sha256(code);
+			if (invites.findByCodeHash(hash).isPresent()) {
+				continue;
+			}
+			invite.setCodeHash(hash);
+			invite.setExpiresAt(now.plus(VALIDITY));
+			return code;
+		}
+		throw new IllegalStateException("Could not generate a unique invite code");
+	}
+
+	private InvitationLinkResponse linkResponse(CoachInvite invite, String code) {
+		String display = InviteCodes.display(code);
+		return new InvitationLinkResponse(invite.getId(), invite.getLabel(), invite.getEmail(), display,
+				app.baseUrlWithoutTrailingSlash() + "/join/" + display, invite.getExpiresAt());
 	}
 
 }

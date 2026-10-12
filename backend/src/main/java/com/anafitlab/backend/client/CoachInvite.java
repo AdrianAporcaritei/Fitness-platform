@@ -30,6 +30,9 @@ public class CoachInvite {
 	@Column(name = "label")
 	private String label;
 
+	@Column(name = "email")
+	private String email;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status")
 	private InviteStatus status;
@@ -77,6 +80,14 @@ public class CoachInvite {
 
 	public void setLabel(String label) {
 		this.label = label;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public InviteStatus getStatus() {

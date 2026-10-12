@@ -1,6 +1,5 @@
 package com.anafitlab.backend.client;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,9 +18,6 @@ public interface CoachClientRepository extends JpaRepository<CoachClient, UUID> 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT c FROM CoachClient c WHERE c.clientId = :clientId AND c.status IN (com.anafitlab.backend.client.RelationshipStatus.ACTIVE, com.anafitlab.backend.client.RelationshipStatus.PAUSED)")
 	Optional<CoachClient> findCurrentByClientIdForUpdate(@Param("clientId") UUID clientId);
-
-	@Query("SELECT c FROM CoachClient c WHERE c.coachId = :coachId AND c.status IN (com.anafitlab.backend.client.RelationshipStatus.ACTIVE, com.anafitlab.backend.client.RelationshipStatus.PAUSED)")
-	List<CoachClient> findCurrentByCoachId(@Param("coachId") UUID coachId);
 
 	@Query("SELECT c FROM CoachClient c WHERE c.coachId = :coachId AND c.clientId = :clientId AND c.status IN (com.anafitlab.backend.client.RelationshipStatus.ACTIVE, com.anafitlab.backend.client.RelationshipStatus.PAUSED)")
 	Optional<CoachClient> findCurrentByCoachIdAndClientId(@Param("coachId") UUID coachId,

@@ -1,6 +1,7 @@
 package com.anafitlab.backend.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,8 +55,12 @@ class ClientSignupTest extends IntegrationTestBase {
 	@Autowired
 	RecordingEmailSender emails;
 
+	private int invitations;
+
 	private String newCode(AppUser coach) throws Exception {
-		String body = mockMvc.perform(post("/api/v1/coach/invites").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(coach)))
+		String body = mockMvc.perform(post("/api/v1/coach/clients").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(coach))
+			.contentType(MediaType.APPLICATION_JSON)
+			.content("{\"name\":\"Invitee\",\"email\":\"invitee" + (++invitations) + "@x.test\"}"))
 			.andExpect(status().isCreated())
 			.andReturn()
 			.getResponse()
@@ -119,7 +124,7 @@ class ClientSignupTest extends IntegrationTestBase {
 
 		String revoked = newCode(coach);
 		Object revokedId = jdbc.queryForObject("SELECT id FROM coach_invite WHERE status = 'PENDING'", Object.class);
-		mockMvc.perform(post("/api/v1/coach/invites/{id}/revoke", revokedId).header(HttpHeaders.AUTHORIZATION,
+		mockMvc.perform(delete("/api/v1/coach/invites/{id}", revokedId).header(HttpHeaders.AUTHORIZATION,
 				fixtures.bearer(coach))).andExpect(status().isNoContent());
 		signup(revoked, "third@x.test").andExpect(status().isGone()).andExpect(jsonPath("$.code").value("INVITE_REVOKED"));
 

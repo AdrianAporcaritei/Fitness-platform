@@ -1,6 +1,6 @@
 package com.anafitlab.backend.client;
 
-import java.util.List;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,7 +19,9 @@ public interface CoachInviteRepository extends JpaRepository<CoachInvite, UUID> 
 	@Query("SELECT i FROM CoachInvite i WHERE i.codeHash = :codeHash")
 	Optional<CoachInvite> findByCodeHashForUpdate(@Param("codeHash") String codeHash);
 
-	List<CoachInvite> findByCoachIdOrderByCreatedAtDesc(UUID coachId);
+	@Query("SELECT count(i) > 0 FROM CoachInvite i WHERE i.coachId = :coachId AND i.email = :email AND i.status = com.anafitlab.backend.client.InviteStatus.PENDING AND i.expiresAt > :now")
+	boolean existsPendingByCoachIdAndEmail(@Param("coachId") UUID coachId, @Param("email") String email,
+			@Param("now") Instant now);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("SELECT i FROM CoachInvite i WHERE i.id = :id AND i.coachId = :coachId")
