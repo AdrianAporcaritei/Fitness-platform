@@ -48,11 +48,11 @@
 | 4 | done |
 | 5 | done |
 | 6 | done (225 Flutter tests green) |
-| 7 | done except the visual browser check (see notes) |
+| 7 | done |
 
 ## Verification notes (2026-10-12)
 
 - Backend: `./mvnw test` – 223 tests, 0 failures. Mutation check: dropping the coach filter on invites and the ENDED de-duplication makes `CoachClientListTest` fail.
 - Flutter: `flutter analyze` clean, `flutter test` – 225 tests green, `flutter build web` OK. Mutation check: dropping the list reload after "Add client" makes the dialog test fail.
 - API E2E against the local stack (backend on :8081, Postgres + Mailpit from docker compose, V3 applied): unverified coach → 403 `EMAIL_NOT_VERIFIED`; add client (email normalized), duplicate → 409 `INVITE_ALREADY_PENDING`; list hides the code; regenerate → old code 404, new code previews; another coach → 404 on regenerate/cancel and an empty list; client signs up with the regenerated link and shows as ACTIVE with `invitedAt`; client → 403 on all coach endpoints; own client email → 409 `ALREADY_YOUR_CLIENT`; used invite cancel → 409 `INVITE_NOT_PENDING`; cancel → 204 and preview 410 `INVITE_REVOKED`; search, status filter, bad status → 400. All 25 checks passed. Test accounts `e2e-*@local.test` were left in the local DB.
-- Not done by the agent: looking at the screens in a browser (no browser available to the agent).
+- Browser check: done by Adrian on 2026-10-13, approved.
