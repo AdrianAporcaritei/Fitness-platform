@@ -174,5 +174,17 @@
   "error_INVITE_NOT_PENDING": "Invitația nu mai este în așteptare.",
   "error_INVITE_ALREADY_PENDING": "Ai deja o invitație în așteptare pentru acest email.",
   "error_ALREADY_YOUR_CLIENT": "Această persoană este deja clientul tău.",
-  "error_EMAIL_NOT_VERIFIED": "Confirmă-ți mai întâi emailul."
+  "error_EMAIL_NOT_VERIFIED": "Confirmă-ți mai întâi emailul.",
+  "clientActions": "Acțiuni client",
+  "pauseClient": "Pune în pauză",
+  "resumeClient": "Reia",
+  "endRelationship": "Încheie colaborarea",
+  "endRelationshipConfirmTitle": "Închei colaborarea cu {name}?",
+  "endRelationshipConfirmBody": "Acțiunea este definitivă. Nu vei mai avea acces la datele acestui client, iar el se va putea alătura altui antrenor.",
+  "keepClient": "Păstrează clientul",
+  "relationshipPaused": "Colaborarea cu {name} a fost pusă în pauză.",
+  "relationshipResumed": "Colaborarea cu {name} a fost reluată.",
+  "relationshipEnded": "Colaborarea cu {name} a fost încheiată.",
+  "error_INVALID_RELATIONSHIP_TRANSITION": "Statusul clientului s-a schimbat între timp. Lista este acum actualizată.",
+  "error_CLIENT_NOT_FOUND": "Acest client nu mai este legat de tine."
 }

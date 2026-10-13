@@ -465,4 +465,51 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get error_EMAIL_NOT_VERIFIED => 'Confirmă-ți mai întâi emailul.';
+
+  @override
+  String get clientActions => 'Acțiuni client';
+
+  @override
+  String get pauseClient => 'Pune în pauză';
+
+  @override
+  String get resumeClient => 'Reia';
+
+  @override
+  String get endRelationship => 'Încheie colaborarea';
+
+  @override
+  String endRelationshipConfirmTitle(String name) {
+    return 'Închei colaborarea cu $name?';
+  }
+
+  @override
+  String get endRelationshipConfirmBody =>
+      'Acțiunea este definitivă. Nu vei mai avea acces la datele acestui client, iar el se va putea alătura altui antrenor.';
+
+  @override
+  String get keepClient => 'Păstrează clientul';
+
+  @override
+  String relationshipPaused(String name) {
+    return 'Colaborarea cu $name a fost pusă în pauză.';
+  }
+
+  @override
+  String relationshipResumed(String name) {
+    return 'Colaborarea cu $name a fost reluată.';
+  }
+
+  @override
+  String relationshipEnded(String name) {
+    return 'Colaborarea cu $name a fost încheiată.';
+  }
+
+  @override
+  String get error_INVALID_RELATIONSHIP_TRANSITION =>
+      'Statusul clientului s-a schimbat între timp. Lista este acum actualizată.';
+
+  @override
+  String get error_CLIENT_NOT_FOUND =>
+      'Acest client nu mai este legat de tine.';
 }

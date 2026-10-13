@@ -40,7 +40,7 @@ class _ClientListPageState extends ConsumerState<ClientsPage> {
   late final _search = TextEditingController(text: widget.query.search);
   Timer? _debounce;
 
-  /// An invitation action is running; further actions wait for it.
+  /// A row action is running; further actions wait for it.
   bool _busy = false;
 
   @override
@@ -131,8 +131,53 @@ class _ClientListPageState extends ConsumerState<ClientsPage> {
     });
   }
 
-  /// Runs an invitation action, reports a failure, then reloads the list
-  /// (also after a failure: the invitation may have been used meanwhile).
+  Future<void> _pause(ClientListItem item) => _changeRelationship(
+    item,
+    ChangeRelationshipRequestStatus.paused,
+    AppLocalizations.of(context).relationshipPaused,
+  );
+
+  Future<void> _resume(ClientListItem item) => _changeRelationship(
+    item,
+    ChangeRelationshipRequestStatus.active,
+    AppLocalizations.of(context).relationshipResumed,
+  );
+
+  Future<void> _end(ClientListItem item) async {
+    final l = AppLocalizations.of(context);
+    final confirmed = await showConfirmDialog(
+      context,
+      title: l.endRelationshipConfirmTitle(item.name ?? l.clientsNoName),
+      body: l.endRelationshipConfirmBody,
+      confirmLabel: l.endRelationship,
+      cancelLabel: l.keepClient,
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+    await _changeRelationship(
+      item,
+      ChangeRelationshipRequestStatus.ended,
+      l.relationshipEnded,
+    );
+  }
+
+  /// [item.id] is the client's user id for ACTIVE and PAUSED rows.
+  Future<void> _changeRelationship(
+    ClientListItem item,
+    ChangeRelationshipRequestStatus status,
+    String Function(String name) done,
+  ) {
+    final l = AppLocalizations.of(context);
+    return _runAction(() async {
+      await ref
+          .read(clientsRepositoryProvider)
+          .changeRelationship(item.id, status);
+      _snack(done(item.name ?? l.clientsNoName));
+    });
+  }
+
+  /// Runs a row action, reports a failure, then reloads the list (also after
+  /// a failure: the invitation or relationship may have changed meanwhile).
   Future<void> _runAction(Future<void> Function() action) async {
     if (_busy) return;
     setState(() => _busy = true);
@@ -258,6 +303,9 @@ class _ClientListPageState extends ConsumerState<ClientsPage> {
       canRegenerate: verified,
       onRegenerate: _regenerate,
       onCancel: _cancel,
+      onPause: _pause,
+      onResume: _resume,
+      onEnd: _end,
     );
     final first = page.page * page.size + 1;
     return Column(
@@ -426,43 +474,77 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
-/// The ⋮ menu of an INVITED row.
+/// The ⋮ menu of a row: invitation actions for INVITED, relationship actions
+/// for ACTIVE and PAUSED, nothing for ENDED.
 class _RowActions {
   const _RowActions({
     required this.enabled,
     required this.canRegenerate,
     required this.onRegenerate,
     required this.onCancel,
+    required this.onPause,
+    required this.onResume,
+    required this.onEnd,
   });
 
   final bool enabled;
   final bool canRegenerate;
   final ValueChanged<ClientListItem> onRegenerate;
   final ValueChanged<ClientListItem> onCancel;
+  final ValueChanged<ClientListItem> onPause;
+  final ValueChanged<ClientListItem> onResume;
+  final ValueChanged<ClientListItem> onEnd;
 
   Widget build(BuildContext context, ClientListItem item) {
-    if (item.status != ClientListStatus.invited) {
-      return const SizedBox(width: 40);
-    }
     final l = AppLocalizations.of(context);
-    return PopupMenuButton<void>(
-      tooltip: l.invitationActions,
-      enabled: enabled,
-      icon: const Icon(Icons.more_vert, color: AppTokens.textMuted),
-      itemBuilder: (_) => [
+    PopupMenuItem<void> danger(String label, VoidCallback onTap) =>
         PopupMenuItem(
-          enabled: canRegenerate,
-          onTap: () => onRegenerate(item),
-          child: Text(l.regenerateLink),
-        ),
-        PopupMenuItem(
-          onTap: () => onCancel(item),
+          onTap: onTap,
           child: Text(
-            l.cancelInvitation,
+            label,
             style: const TextStyle(color: AppTokens.errorText),
           ),
-        ),
-      ],
+        );
+    final (
+      String tooltip,
+      List<PopupMenuEntry<void>> items,
+    ) = switch (item.status) {
+      ClientListStatus.invited => (
+        l.invitationActions,
+        [
+          PopupMenuItem(
+            enabled: canRegenerate,
+            onTap: () => onRegenerate(item),
+            child: Text(l.regenerateLink),
+          ),
+          danger(l.cancelInvitation, () => onCancel(item)),
+        ],
+      ),
+      ClientListStatus.active => (
+        l.clientActions,
+        [
+          PopupMenuItem(onTap: () => onPause(item), child: Text(l.pauseClient)),
+          danger(l.endRelationship, () => onEnd(item)),
+        ],
+      ),
+      ClientListStatus.paused => (
+        l.clientActions,
+        [
+          PopupMenuItem(
+            onTap: () => onResume(item),
+            child: Text(l.resumeClient),
+          ),
+          danger(l.endRelationship, () => onEnd(item)),
+        ],
+      ),
+      _ => ('', const <PopupMenuEntry<void>>[]),
+    };
+    if (items.isEmpty) return const SizedBox(width: 40);
+    return PopupMenuButton<void>(
+      tooltip: tooltip,
+      enabled: enabled,
+      icon: const Icon(Icons.more_vert, color: AppTokens.textMuted),
+      itemBuilder: (_) => items,
     );
   }
 }

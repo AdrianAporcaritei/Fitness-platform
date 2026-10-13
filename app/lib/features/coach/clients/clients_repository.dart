@@ -37,6 +37,17 @@ class ClientsRepository {
 
   Future<void> cancel(String invitationId) =>
       apiCall(() => _api.openapi.cancelInvitation(id: invitationId));
+
+  /// Pauses, resumes or ends the relationship with a linked client.
+  Future<void> changeRelationship(
+    String clientId,
+    ChangeRelationshipRequestStatus status,
+  ) => apiCall(
+    () => _api.openapi.changeRelationship(
+      clientId: clientId,
+      body: ChangeRelationshipRequest(status: status),
+    ),
+  );
 }
 
 final clientsRepositoryProvider = Provider<ClientsRepository>(

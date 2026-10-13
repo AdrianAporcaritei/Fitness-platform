@@ -144,8 +144,8 @@ void main() {
       expect(find.text('Expires Oct 17, 2026'), findsOneWidget);
       expect(find.text('Invitation expired'), findsOneWidget);
       expect(find.text('1–4 of 4'), findsOneWidget);
-      // Actions only on invitations.
       expect(find.byTooltip('Invitation actions'), findsNWidgets(2));
+      expect(find.byTooltip('Client actions'), findsNWidgets(2));
     });
 
     testWidgets('a row without name or email shows placeholders', (t) async {

@@ -463,4 +463,51 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get error_EMAIL_NOT_VERIFIED => 'Confirm your email first.';
+
+  @override
+  String get clientActions => 'Client actions';
+
+  @override
+  String get pauseClient => 'Pause';
+
+  @override
+  String get resumeClient => 'Resume';
+
+  @override
+  String get endRelationship => 'End relationship';
+
+  @override
+  String endRelationshipConfirmTitle(String name) {
+    return 'End the relationship with $name?';
+  }
+
+  @override
+  String get endRelationshipConfirmBody =>
+      'This can\'t be undone. You\'ll lose access to this client\'s data, and they will be able to join another coach.';
+
+  @override
+  String get keepClient => 'Keep client';
+
+  @override
+  String relationshipPaused(String name) {
+    return 'Relationship with $name paused.';
+  }
+
+  @override
+  String relationshipResumed(String name) {
+    return 'Relationship with $name resumed.';
+  }
+
+  @override
+  String relationshipEnded(String name) {
+    return 'Relationship with $name ended.';
+  }
+
+  @override
+  String get error_INVALID_RELATIONSHIP_TRANSITION =>
+      'This client\'s status changed in the meantime. The list is up to date now.';
+
+  @override
+  String get error_CLIENT_NOT_FOUND =>
+      'This client is no longer linked to you.';
 }

@@ -937,6 +937,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm your email first.'**
   String get error_EMAIL_NOT_VERIFIED;
+
+  /// No description provided for @clientActions.
+  ///
+  /// In en, this message translates to:
+  /// **'Client actions'**
+  String get clientActions;
+
+  /// No description provided for @pauseClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Pause'**
+  String get pauseClient;
+
+  /// No description provided for @resumeClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume'**
+  String get resumeClient;
+
+  /// No description provided for @endRelationship.
+  ///
+  /// In en, this message translates to:
+  /// **'End relationship'**
+  String get endRelationship;
+
+  /// No description provided for @endRelationshipConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'End the relationship with {name}?'**
+  String endRelationshipConfirmTitle(String name);
+
+  /// No description provided for @endRelationshipConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This can\'t be undone. You\'ll lose access to this client\'s data, and they will be able to join another coach.'**
+  String get endRelationshipConfirmBody;
+
+  /// No description provided for @keepClient.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep client'**
+  String get keepClient;
+
+  /// No description provided for @relationshipPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship with {name} paused.'**
+  String relationshipPaused(String name);
+
+  /// No description provided for @relationshipResumed.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship with {name} resumed.'**
+  String relationshipResumed(String name);
+
+  /// No description provided for @relationshipEnded.
+  ///
+  /// In en, this message translates to:
+  /// **'Relationship with {name} ended.'**
+  String relationshipEnded(String name);
+
+  /// No description provided for @error_INVALID_RELATIONSHIP_TRANSITION.
+  ///
+  /// In en, this message translates to:
+  /// **'This client\'s status changed in the meantime. The list is up to date now.'**
+  String get error_INVALID_RELATIONSHIP_TRANSITION;
+
+  /// No description provided for @error_CLIENT_NOT_FOUND.
+  ///
+  /// In en, this message translates to:
+  /// **'This client is no longer linked to you.'**
+  String get error_CLIENT_NOT_FOUND;
 }
 
 class _AppLocalizationsDelegate

@@ -30,6 +30,8 @@ const knownErrorCodes = <String>[
   'INVITE_ALREADY_PENDING',
   'ALREADY_YOUR_CLIENT',
   'EMAIL_NOT_VERIFIED',
+  'INVALID_RELATIONSHIP_TRANSITION',
+  'CLIENT_NOT_FOUND',
 ];
 
 String errorMessage(AppLocalizations l, ApiError e) {
@@ -64,5 +66,7 @@ String fieldErrorMessage(AppLocalizations l, String code) => switch (code) {
   'INVITE_ALREADY_PENDING' => l.error_INVITE_ALREADY_PENDING,
   'ALREADY_YOUR_CLIENT' => l.error_ALREADY_YOUR_CLIENT,
   'EMAIL_NOT_VERIFIED' => l.error_EMAIL_NOT_VERIFIED,
+  'INVALID_RELATIONSHIP_TRANSITION' => l.error_INVALID_RELATIONSHIP_TRANSITION,
+  'CLIENT_NOT_FOUND' => l.error_CLIENT_NOT_FOUND,
   _ => l.error_UNKNOWN,
 };

@@ -222,5 +222,45 @@
   "error_INVITE_NOT_PENDING": "This invitation is no longer pending.",
   "error_INVITE_ALREADY_PENDING": "You already have a pending invitation for this email.",
   "error_ALREADY_YOUR_CLIENT": "This person is already your client.",
-  "error_EMAIL_NOT_VERIFIED": "Confirm your email first."
+  "error_EMAIL_NOT_VERIFIED": "Confirm your email first.",
+  "clientActions": "Client actions",
+  "pauseClient": "Pause",
+  "resumeClient": "Resume",
+  "endRelationship": "End relationship",
+  "endRelationshipConfirmTitle": "End the relationship with {name}?",
+  "@endRelationshipConfirmTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "endRelationshipConfirmBody": "This can't be undone. You'll lose access to this client's data, and they will be able to join another coach.",
+  "keepClient": "Keep client",
+  "relationshipPaused": "Relationship with {name} paused.",
+  "@relationshipPaused": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "relationshipResumed": "Relationship with {name} resumed.",
+  "@relationshipResumed": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "relationshipEnded": "Relationship with {name} ended.",
+  "@relationshipEnded": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "error_INVALID_RELATIONSHIP_TRANSITION": "This client's status changed in the meantime. The list is up to date now.",
+  "error_CLIENT_NOT_FOUND": "This client is no longer linked to you."
 }
