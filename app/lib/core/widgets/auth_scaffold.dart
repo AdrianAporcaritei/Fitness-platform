@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_localizations.dart';
 import '../theme/tokens.dart';
+import 'app_logo.dart';
 import 'language_switch.dart';
 
 /// Shared layout of the auth screens: logo and app name on top, [header],
@@ -54,7 +54,7 @@ class AuthScaffold extends StatelessWidget {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const _Logo(),
+                            const AppLogo(),
                             const SizedBox(height: 24),
                             DecoratedBox(
                               key: cardKey,
@@ -99,41 +99,6 @@ class AuthScaffold extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _Logo extends StatelessWidget {
-  const _Logo();
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: AppTokens.accent,
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          ),
-          child: Text(
-            'A',
-            style: textTheme.titleLarge?.copyWith(
-              color: AppTokens.onAccent,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          AppLocalizations.of(context).appName,
-          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-        ),
-      ],
     );
   }
 }

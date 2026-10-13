@@ -26,6 +26,10 @@ const knownErrorCodes = <String>[
   'INVITE_NOT_FOUND',
   'COACH_UNAVAILABLE',
   'INVALID_TOKEN',
+  'INVITE_NOT_PENDING',
+  'INVITE_ALREADY_PENDING',
+  'ALREADY_YOUR_CLIENT',
+  'EMAIL_NOT_VERIFIED',
 ];
 
 String errorMessage(AppLocalizations l, ApiError e) {
@@ -56,5 +60,9 @@ String fieldErrorMessage(AppLocalizations l, String code) => switch (code) {
   'INVITE_NOT_FOUND' => l.error_INVITE_NOT_FOUND,
   'COACH_UNAVAILABLE' => l.error_COACH_UNAVAILABLE,
   'INVALID_TOKEN' => l.error_INVALID_TOKEN,
+  'INVITE_NOT_PENDING' => l.error_INVITE_NOT_PENDING,
+  'INVITE_ALREADY_PENDING' => l.error_INVITE_ALREADY_PENDING,
+  'ALREADY_YOUR_CLIENT' => l.error_ALREADY_YOUR_CLIENT,
+  'EMAIL_NOT_VERIFIED' => l.error_EMAIL_NOT_VERIFIED,
   _ => l.error_UNKNOWN,
 };

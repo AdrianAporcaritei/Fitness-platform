@@ -43,6 +43,15 @@ class SchemaConstraintsTest extends IntegrationTestBase {
 	}
 
 	@Test
+	void rejectsUppercaseInviteEmail() {
+		UUID coach = insertUser("coach@x.ro", "COACH");
+		assertThatThrownBy(() -> jdbc.update("""
+				INSERT INTO coach_invite (coach_id, code_hash, label, email, status, expires_at)
+				VALUES (?, 'h', 'Ana', 'Ana@x.ro', 'PENDING', now() + interval '7 days')
+				""", coach)).isInstanceOf(DataIntegrityViolationException.class);
+	}
+
+	@Test
 	void rejectsDuplicateEmail() {
 		insertUser("ana@x.ro", "CLIENT");
 		assertThatThrownBy(() -> insertUser("ana@x.ro", "COACH")).isInstanceOf(DataIntegrityViolationException.class);

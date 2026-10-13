@@ -5,21 +5,21 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 @JsonEnum()
-enum InviteResponseStatus {
-  @JsonValue('PENDING')
-  pending('PENDING'),
-  @JsonValue('USED')
-  used('USED'),
-  @JsonValue('REVOKED')
-  revoked('REVOKED'),
-  @JsonValue('EXPIRED')
-  expired('EXPIRED'),
+enum ClientListStatus {
+  @JsonValue('INVITED')
+  invited('INVITED'),
+  @JsonValue('ACTIVE')
+  active('ACTIVE'),
+  @JsonValue('PAUSED')
+  paused('PAUSED'),
+  @JsonValue('ENDED')
+  ended('ENDED'),
   /// Default value for all unparsed values, allows backward compatibility when adding new values on the backend.
   $unknown(null);
 
-  const InviteResponseStatus(this.json);
+  const ClientListStatus(this.json);
 
-  factory InviteResponseStatus.fromJson(String json) => values.firstWhere(
+  factory ClientListStatus.fromJson(String json) => values.firstWhere(
         (e) => e.json == json,
         orElse: () => $unknown,
       );
@@ -37,5 +37,5 @@ enum InviteResponseStatus {
   @override
   String toString() => json?.toString() ?? super.toString();
   /// Returns all defined enum values excluding the $unknown value.
-  static List<InviteResponseStatus> get $valuesDefined => values.where((value) => value != $unknown).toList();
+  static List<ClientListStatus> get $valuesDefined => values.where((value) => value != $unknown).toList();
 }

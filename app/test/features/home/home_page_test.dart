@@ -21,10 +21,10 @@ Future<FakeApi> _pumpHome(WidgetTester t, Map<String, dynamic> user) async {
 }
 
 void main() {
-  testWidgets('active coach: greeting, role, no banner', (t) async {
-    await _pumpHome(t, userJson(role: 'COACH', status: 'ACTIVE'));
+  testWidgets('active client: greeting, role, no banner', (t) async {
+    await _pumpHome(t, userJson(role: 'CLIENT', status: 'ACTIVE'));
     expect(find.text('Hello, Ana'), findsOneWidget);
-    expect(find.text('Coach'), findsOneWidget);
+    expect(find.text('Client'), findsOneWidget);
     expect(find.text('Resend'), findsNothing);
   });
 

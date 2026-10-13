@@ -271,4 +271,196 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get error_INVALID_TOKEN => 'This link is invalid or has expired.';
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get navClients => 'Clients';
+
+  @override
+  String get navWorkouts => 'Workouts';
+
+  @override
+  String get navMealPlans => 'Meal plans';
+
+  @override
+  String get navChat => 'Chat';
+
+  @override
+  String get navComingSoon => 'Coming soon';
+
+  @override
+  String get openMenu => 'Open menu';
+
+  @override
+  String get clientsTitle => 'Clients';
+
+  @override
+  String get addClientButton => '+ Add client';
+
+  @override
+  String get addClientNeedsVerifiedEmail =>
+      'Confirm your email to add clients.';
+
+  @override
+  String get clientsSearchHint => 'Search by name or email';
+
+  @override
+  String get clientsStatusAll => 'All statuses';
+
+  @override
+  String get clientsStatusFilter => 'Status';
+
+  @override
+  String get clientStatusInvited => 'Invited';
+
+  @override
+  String get clientStatusActive => 'Active';
+
+  @override
+  String get clientStatusPaused => 'Paused';
+
+  @override
+  String get clientStatusEnded => 'Ended';
+
+  @override
+  String get clientsColumnName => 'Name';
+
+  @override
+  String get clientsColumnEmail => 'Email';
+
+  @override
+  String get clientsColumnStatus => 'Status';
+
+  @override
+  String get clientsColumnInvited => 'Invited on';
+
+  @override
+  String clientsInvitationExpires(String date) {
+    return 'Expires $date';
+  }
+
+  @override
+  String get clientsInvitationExpired => 'Invitation expired';
+
+  @override
+  String get clientsNoName => '(no name)';
+
+  @override
+  String get clientsEmptyTitle => 'No clients yet';
+
+  @override
+  String get clientsEmptyBody =>
+      'Add a client and send them the invitation link. Once they join, they show up here.';
+
+  @override
+  String get clientsInviteFirst => 'Invite your first client';
+
+  @override
+  String get clientsNoMatchTitle => 'No clients match these filters';
+
+  @override
+  String get clientsClearFilters => 'Clear filters';
+
+  @override
+  String get clientsLoadError => 'Couldn\'t load your clients.';
+
+  @override
+  String clientsRange(int from, int to, int total) {
+    return '$from–$to of $total';
+  }
+
+  @override
+  String get previousPage => 'Previous page';
+
+  @override
+  String get nextPage => 'Next page';
+
+  @override
+  String get invitationActions => 'Invitation actions';
+
+  @override
+  String get addClientTitle => 'Add client';
+
+  @override
+  String get addClientIntro =>
+      'We\'ll create a personal invitation link for them. No email is sent – you share the link yourself.';
+
+  @override
+  String get fullNameLabel => 'Full name';
+
+  @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get createInvitation => 'Create invitation';
+
+  @override
+  String invitationLinkTitle(String name) {
+    return 'Invitation link for $name';
+  }
+
+  @override
+  String get invitationLinkOnce =>
+      'Copy the link now and send it to your client. You won\'t be able to see it again after closing this window.';
+
+  @override
+  String invitationLinkExpires(String date) {
+    return 'Valid until $date.';
+  }
+
+  @override
+  String get copyLink => 'Copy link';
+
+  @override
+  String get linkCopied => 'Copied';
+
+  @override
+  String get done => 'Done';
+
+  @override
+  String get regenerateLink => 'Regenerate link';
+
+  @override
+  String get regenerateConfirmTitle => 'Regenerate the link?';
+
+  @override
+  String regenerateConfirmBody(String name) {
+    return 'The current link for $name stops working and a new one, valid for 7 days, is created.';
+  }
+
+  @override
+  String get regenerate => 'Regenerate';
+
+  @override
+  String get cancelInvitation => 'Cancel invitation';
+
+  @override
+  String get cancelInvitationConfirmTitle => 'Cancel the invitation?';
+
+  @override
+  String cancelInvitationConfirmBody(String name) {
+    return '$name won\'t be able to join with this link anymore.';
+  }
+
+  @override
+  String get keepInvitation => 'Keep it';
+
+  @override
+  String get invitationCancelled => 'Invitation cancelled.';
+
+  @override
+  String get error_INVITE_NOT_PENDING =>
+      'This invitation is no longer pending.';
+
+  @override
+  String get error_INVITE_ALREADY_PENDING =>
+      'You already have a pending invitation for this email.';
+
+  @override
+  String get error_ALREADY_YOUR_CLIENT => 'This person is already your client.';
+
+  @override
+  String get error_EMAIL_NOT_VERIFIED => 'Confirm your email first.';
 }

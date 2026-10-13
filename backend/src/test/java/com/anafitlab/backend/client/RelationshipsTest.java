@@ -72,45 +72,6 @@ class RelationshipsTest extends IntegrationTestBase {
 	}
 
 	@Test
-	void listsOnlyCurrentClients() throws Exception {
-		AppUser coach = coach("c@x.test");
-		AppUser other = coach("o@x.test");
-		AppUser active = client("a@x.test");
-		AppUser paused = client("p@x.test");
-		AppUser ended = client("e@x.test");
-		AppUser foreign = client("f@x.test");
-		fixtures.link(coach, active, RelationshipStatus.ACTIVE);
-		fixtures.link(coach, paused, RelationshipStatus.PAUSED);
-		fixtures.link(coach, ended, RelationshipStatus.ENDED);
-		fixtures.link(other, foreign, RelationshipStatus.ACTIVE);
-		mockMvc.perform(get("/api/v1/coach/clients").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(coach)))
-			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.length()").value(2))
-			.andExpect(jsonPath("$[?(@.email=='a@x.test')].status").value("ACTIVE"))
-			.andExpect(jsonPath("$[?(@.email=='p@x.test')].status").value("PAUSED"))
-			.andExpect(jsonPath("$[0].clientId").exists())
-			.andExpect(jsonPath("$[0].startedAt").exists());
-	}
-
-	@Test
-	void listIsOrderedByLastThenFirstName() throws Exception {
-		AppUser coach = coach("c@x.test");
-		String[][] names = { { "Zed", "Adams" }, { "Amy", "Brown" }, { "Abe", "Adams" } };
-		for (int i = 0; i < names.length; i++) {
-			AppUser c = client("n" + i + "@x.test");
-			c.setFirstName(names[i][0]);
-			c.setLastName(names[i][1]);
-			jdbc.update("UPDATE app_user SET first_name = ?, last_name = ? WHERE id = ?", names[i][0], names[i][1],
-					c.getId());
-			fixtures.link(coach, c, RelationshipStatus.ACTIVE);
-		}
-		mockMvc.perform(get("/api/v1/coach/clients").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(coach)))
-			.andExpect(jsonPath("$[0].firstName").value("Abe"))
-			.andExpect(jsonPath("$[1].firstName").value("Zed"))
-			.andExpect(jsonPath("$[2].firstName").value("Amy"));
-	}
-
-	@Test
 	void pauseResumeEnd() throws Exception {
 		AppUser coach = coach("c@x.test");
 		AppUser client = client("cl@x.test");
@@ -185,7 +146,7 @@ class RelationshipsTest extends IntegrationTestBase {
 			.andExpect(status().isNotFound())
 			.andExpect(jsonPath("$.code").value("NO_COACH"));
 		mockMvc.perform(get("/api/v1/coach/clients").header(HttpHeaders.AUTHORIZATION, fixtures.bearer(coach)))
-			.andExpect(jsonPath("$.length()").value(0));
+			.andExpect(jsonPath("$.totalItems").value(0));
 	}
 
 	@Test

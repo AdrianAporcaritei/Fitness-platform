@@ -1,12 +1,8 @@
 package com.anafitlab.backend.client;
 
 import java.time.Clock;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,18 +29,6 @@ public class RelationshipService {
 		this.users = users;
 		this.profiles = profiles;
 		this.clock = clock;
-	}
-
-	@Transactional(readOnly = true)
-	public List<CoachClientResponse> listClients(CurrentUser coach) {
-		List<CoachClient> current = links.findCurrentByCoachId(coach.id());
-		Map<UUID, AppUser> clients = users.findAllById(current.stream().map(CoachClient::getClientId).toList())
-				.stream().collect(Collectors.toMap(AppUser::getId, Function.identity()));
-		return current.stream()
-				.map(link -> toResponse(link, clients.get(link.getClientId())))
-				.sorted(Comparator.comparing(CoachClientResponse::lastName, String.CASE_INSENSITIVE_ORDER)
-						.thenComparing(CoachClientResponse::firstName, String.CASE_INSENSITIVE_ORDER))
-				.toList();
 	}
 
 	@Transactional

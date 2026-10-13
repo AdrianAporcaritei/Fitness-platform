@@ -1,7 +1,7 @@
-# Domain Model – Fitness Platform (v0.5)
+# Domain Model – Fitness Platform (v0.6)
 
 Identificatorii (tabele, câmpuri) sunt în engleză, descrierile în română.
-**Statut:** v0.5 – actualizat după deciziile din secțiunea 9 (ultima: #31, slice 1: identitate, autentificare, legarea coach–client). Întrebările rămase deschise sunt în secțiunea 10.
+**Statut:** v0.6 – actualizat după deciziile din secțiunea 9 (ultima: #32, lista de clienți a coach-ului și invitațiile cu nume + email). Întrebările rămase deschise sunt în secțiunea 10.
 
 ---
 
@@ -74,20 +74,25 @@ Un utilizator are **un singur rol** (`COACH`, `CLIENT` sau `ADMIN`). Un client a
 **Încheierea relației:** coach-ul **sau** clientul poate încheia relația (`ENDED`); doar coach-ul poate pune în pauză / relua (`PAUSED` / `ACTIVE`). După `ENDED`, coach-ul nu mai are niciun acces la datele clientului.
 
 ### coach_invite
-Invitație personală, cu un singur cod, prin care un client se înregistrează la un coach (decizia #26).
+Invitație personală, cu un singur cod, prin care un client se înregistrează la un coach (deciziile #26, #32). Coach-ul „adaugă un client" (nume + email) → se creează o invitație; în lista coach-ului, invitațiile în așteptare apar cu starea `INVITED` (derivată, nu stocată în `coach_client`).
 | Câmp | Tip | Note |
 |---|---|---|
 | id | uuid PK | |
 | coach_id | uuid FK → app_user | |
 | code_hash | varchar, unique | SHA-256 (hex, litere mici) al codului normalizat |
-| label | varchar(100), null | ex. „Maria P." |
+| label | varchar(100), null | numele invitatului (ex. „Maria Pavel"); obligatoriu prin API din #32, null doar la invitațiile mai vechi |
+| email | varchar(254), null | emailul invitatului, litere mici (`CHECK (email = lower(email))`); informativ: clientul se poate înregistra cu alt email; null doar la invitațiile mai vechi |
 | status | varchar | `PENDING`, `USED`, `REVOKED` (CHECK) |
 | expires_at | timestamptz | creare + 7 zile |
 | used_at | timestamptz, null | |
 | used_by_client_id | uuid, null FK → app_user | `ON DELETE SET NULL` |
 
 - Cod: 10 caractere Crockford base32 (fără `I`, `L`, `O`, `U`), afișat `XXXXX-XXXXX`; normalizat (majuscule, fără liniuțe și spații) înainte de hash. Link: `{APP_BASE_URL}/join/{code}`.
-- Codul în clar se întoarce o singură dată, la creare; nu se stochează.
+- Codul în clar se întoarce o singură dată, la creare sau la regenerare; nu se stochează.
+- **Regenerare:** doar pentru o invitație `PENDING` (inclusiv expirată); păstrează rândul (`id`, `created_at`), generează un cod nou (hash nou, vechiul link nu mai funcționează) și resetează `expires_at` = acum + 7 zile.
+- **Anulare:** doar pentru o invitație `PENDING` (inclusiv expirată) → `REVOKED`; rândul rămâne.
+- **Duplicate:** la adăugare se verifică doar datele coach-ului: o invitație `PENDING` neexpirată cu același email → `409 INVITE_ALREADY_PENDING`; un client curent (`ACTIVE`/`PAUSED`) cu același email → `409 ALREADY_YOUR_CLIENT`. Nu se dezvăluie existența altor conturi.
+- Coach-ul `PENDING` nu poate adăuga clienți și nu poate regenera invitații; poate anula.
 - Expirarea se deduce din `expires_at`: API-ul raportează `EXPIRED` pentru o invitație `PENDING` expirată; valoarea nu se stochează.
 - O invitație `PENDING` al cărei coach nu este `ACTIVE` (ex. `SUSPENDED`) nu poate fi folosită: previzualizarea, înregistrarea clientului și legarea întorc `409 COACH_UNAVAILABLE`, iar invitația rămâne `PENDING` (redevine utilizabilă dacă coach-ul e reactivat și invitația n-a expirat).
 
@@ -620,6 +625,7 @@ Notă: copiile din backup-uri dispar abia la rotația backup-urilor; politica de
 | 29 | Verificare email și resetare parolă | Incluse; emailuri text simplu din `MessageSource` (ro/en); Mailpit local, SMTP prin configurare în producție; coach-ul `PENDING` nu poate crea invitații, clientul `PENDING` nu are restricții |
 | 30 | Înregistrare coach deschisă | Oricine se poate înregistra ca coach; devine `ACTIVE` după verificarea emailului; primul ADMIN se creează la pornire din `ADMIN_EMAIL` / `ADMIN_PASSWORD` |
 | 31 | `PAUSED` și încheierea relației | `PAUSED` = încă coach curent, coach-ul are acces doar pentru citire, chatul rămâne deschis; coach-ul sau clientul poate încheia relația, doar coach-ul poate pune în pauză / relua (§2) |
+| 32 | Lista de clienți a coach-ului | „Adaugă client" = invitație cu nume (`label`) + email (coloană nouă în `coach_invite`); `INVITED` nu revine în `coach_client`, ci se derivă din invitațiile `PENDING` (inclusiv expirate, marcate ca atare). Lista: paginată, căutare după nume/email (fără diferență de majuscule), filtru `INVITED` / `ACTIVE` / `PAUSED` / `ENDED`; implicit fără `ENDED`; `ENDED` doar la filtrare explicită, doar nume/email/date, un rând per client. Invitațiile se pot regenera (cod nou, același rând) sau anula. Fără email automat (§2) |
 
 ### Notă privind datele personale
 Se pornește de la decizia „fără reguli GDPR". Totuși, platforma stochează și așa date cu caracter personal (nume, email, greutate, măsurători corporale, fotografii de progres, mesaje, note despre accidentări), iar dacă utilizatorii sunt în UE, GDPR se aplică indiferent de cât de puține date se colectează. Nu e o problemă de arhitectură, dar pentru un lansament public merită un minim practic: politică de confidențialitate și termeni, acord la înregistrare, posibilitatea ca utilizatorul să-și șteargă contul și să-și exporte datele, acces strict pe roluri, HTTPS și parole hash-uite. Acestea nu schimbă modelul de mai sus (sunt în mare parte funcționalități de cont), dar e bine de știut. Pentru certitudine, consultă un specialist juridic; acesta nu este sfat juridic.
@@ -638,6 +644,7 @@ Se pornește de la decizia „fără reguli GDPR". Totuși, platforma stochează
 8. **Blocarea țintită a unui cont:** oricine știe emailul unui utilizator poate consuma limitele per email (login 5/15 min, resetare parolă 3/oră) și îl poate bloca temporar. Opțiuni ulterioare: cheie email + IP, CAPTCHA după câteva eșecuri.
 9. **Refresh fără perioadă de grație:** reutilizarea unui refresh token rotit revocă toată familia (decizia D3). Două taburi sau un retry după timeout deloghează utilizatorul. Propunere: în aplicația Flutter, un singur refresh în curs, partajat între taburi; perioadă de grație pe server doar dacă problema apare în practică.
 10. **Utilizator `SUSPENDED` cu access token valid:** suspendarea blochează login-ul și refresh-ul, dar un access token deja emis rămâne valid până expiră (max. 15 min). De adăugat în slice-ul de administrare o verificare de status per cerere (sau o listă de revocare) dacă 15 minute nu sunt acceptabile.
+11. **Căutare fără diacritice în lista de clienți:** acum căutarea ignoră doar majusculele („catalin" nu găsește „Cătălin"). Necesită extensia `unaccent` (o migrare cu `CREATE EXTENSION`, care pe unele hosturi gestionate cere drepturi). De decis înainte de deploy.
 
 ---
 

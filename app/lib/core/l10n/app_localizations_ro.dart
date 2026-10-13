@@ -273,4 +273,196 @@ class AppLocalizationsRo extends AppLocalizations {
 
   @override
   String get error_INVALID_TOKEN => 'Acest link este invalid sau a expirat.';
+
+  @override
+  String get navDashboard => 'Dashboard';
+
+  @override
+  String get navClients => 'Clienți';
+
+  @override
+  String get navWorkouts => 'Antrenamente';
+
+  @override
+  String get navMealPlans => 'Planuri alimentare';
+
+  @override
+  String get navChat => 'Chat';
+
+  @override
+  String get navComingSoon => 'În curând';
+
+  @override
+  String get openMenu => 'Deschide meniul';
+
+  @override
+  String get clientsTitle => 'Clienți';
+
+  @override
+  String get addClientButton => '+ Adaugă client';
+
+  @override
+  String get addClientNeedsVerifiedEmail =>
+      'Confirmă-ți emailul ca să poți adăuga clienți.';
+
+  @override
+  String get clientsSearchHint => 'Caută după nume sau email';
+
+  @override
+  String get clientsStatusAll => 'Toate stările';
+
+  @override
+  String get clientsStatusFilter => 'Stare';
+
+  @override
+  String get clientStatusInvited => 'Invitat';
+
+  @override
+  String get clientStatusActive => 'Activ';
+
+  @override
+  String get clientStatusPaused => 'În pauză';
+
+  @override
+  String get clientStatusEnded => 'Încheiat';
+
+  @override
+  String get clientsColumnName => 'Nume';
+
+  @override
+  String get clientsColumnEmail => 'Email';
+
+  @override
+  String get clientsColumnStatus => 'Stare';
+
+  @override
+  String get clientsColumnInvited => 'Data invitației';
+
+  @override
+  String clientsInvitationExpires(String date) {
+    return 'Expiră pe $date';
+  }
+
+  @override
+  String get clientsInvitationExpired => 'Invitație expirată';
+
+  @override
+  String get clientsNoName => '(fără nume)';
+
+  @override
+  String get clientsEmptyTitle => 'Încă nu ai clienți';
+
+  @override
+  String get clientsEmptyBody =>
+      'Adaugă un client și trimite-i linkul de invitație. După ce se alătură, apare aici.';
+
+  @override
+  String get clientsInviteFirst => 'Invită primul client';
+
+  @override
+  String get clientsNoMatchTitle => 'Niciun client nu corespunde filtrelor';
+
+  @override
+  String get clientsClearFilters => 'Șterge filtrele';
+
+  @override
+  String get clientsLoadError => 'Nu am putut încărca clienții.';
+
+  @override
+  String clientsRange(int from, int to, int total) {
+    return '$from–$to din $total';
+  }
+
+  @override
+  String get previousPage => 'Pagina anterioară';
+
+  @override
+  String get nextPage => 'Pagina următoare';
+
+  @override
+  String get invitationActions => 'Acțiuni invitație';
+
+  @override
+  String get addClientTitle => 'Adaugă client';
+
+  @override
+  String get addClientIntro =>
+      'Creăm un link personal de invitație. Nu se trimite niciun email – tu trimiți linkul.';
+
+  @override
+  String get fullNameLabel => 'Nume complet';
+
+  @override
+  String get cancel => 'Anulează';
+
+  @override
+  String get createInvitation => 'Creează invitația';
+
+  @override
+  String invitationLinkTitle(String name) {
+    return 'Link de invitație pentru $name';
+  }
+
+  @override
+  String get invitationLinkOnce =>
+      'Copiază linkul acum și trimite-l clientului. După ce închizi fereastra, nu îl vei mai putea vedea.';
+
+  @override
+  String invitationLinkExpires(String date) {
+    return 'Valabil până pe $date.';
+  }
+
+  @override
+  String get copyLink => 'Copiază linkul';
+
+  @override
+  String get linkCopied => 'Copiat';
+
+  @override
+  String get done => 'Gata';
+
+  @override
+  String get regenerateLink => 'Regenerează linkul';
+
+  @override
+  String get regenerateConfirmTitle => 'Regenerezi linkul?';
+
+  @override
+  String regenerateConfirmBody(String name) {
+    return 'Linkul actual pentru $name nu va mai funcționa și se creează unul nou, valabil 7 zile.';
+  }
+
+  @override
+  String get regenerate => 'Regenerează';
+
+  @override
+  String get cancelInvitation => 'Anulează invitația';
+
+  @override
+  String get cancelInvitationConfirmTitle => 'Anulezi invitația?';
+
+  @override
+  String cancelInvitationConfirmBody(String name) {
+    return '$name nu se va mai putea alătura cu acest link.';
+  }
+
+  @override
+  String get keepInvitation => 'Păstrează';
+
+  @override
+  String get invitationCancelled => 'Invitația a fost anulată.';
+
+  @override
+  String get error_INVITE_NOT_PENDING => 'Invitația nu mai este în așteptare.';
+
+  @override
+  String get error_INVITE_ALREADY_PENDING =>
+      'Ai deja o invitație în așteptare pentru acest email.';
+
+  @override
+  String get error_ALREADY_YOUR_CLIENT =>
+      'Această persoană este deja clientul tău.';
+
+  @override
+  String get error_EMAIL_NOT_VERIFIED => 'Confirmă-ți mai întâi emailul.';
 }

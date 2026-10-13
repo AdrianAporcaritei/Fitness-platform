@@ -116,5 +116,111 @@
   "error_INVITE_REVOKED": "This invite is no longer valid.",
   "error_INVITE_NOT_FOUND": "We couldn't find this invite.",
   "error_COACH_UNAVAILABLE": "Your coach isn't available right now.",
-  "error_INVALID_TOKEN": "This link is invalid or has expired."
+  "error_INVALID_TOKEN": "This link is invalid or has expired.",
+  "navDashboard": "Dashboard",
+  "navClients": "Clients",
+  "navWorkouts": "Workouts",
+  "navMealPlans": "Meal plans",
+  "navChat": "Chat",
+  "navComingSoon": "Coming soon",
+  "openMenu": "Open menu",
+  "clientsTitle": "Clients",
+  "addClientButton": "+ Add client",
+  "addClientNeedsVerifiedEmail": "Confirm your email to add clients.",
+  "clientsSearchHint": "Search by name or email",
+  "clientsStatusAll": "All statuses",
+  "clientsStatusFilter": "Status",
+  "clientStatusInvited": "Invited",
+  "clientStatusActive": "Active",
+  "clientStatusPaused": "Paused",
+  "clientStatusEnded": "Ended",
+  "clientsColumnName": "Name",
+  "clientsColumnEmail": "Email",
+  "clientsColumnStatus": "Status",
+  "clientsColumnInvited": "Invited on",
+  "clientsInvitationExpires": "Expires {date}",
+  "@clientsInvitationExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "clientsInvitationExpired": "Invitation expired",
+  "clientsNoName": "(no name)",
+  "clientsEmptyTitle": "No clients yet",
+  "clientsEmptyBody": "Add a client and send them the invitation link. Once they join, they show up here.",
+  "clientsInviteFirst": "Invite your first client",
+  "clientsNoMatchTitle": "No clients match these filters",
+  "clientsClearFilters": "Clear filters",
+  "clientsLoadError": "Couldn't load your clients.",
+  "clientsRange": "{from}–{to} of {total}",
+  "@clientsRange": {
+    "placeholders": {
+      "from": {
+        "type": "int"
+      },
+      "to": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "previousPage": "Previous page",
+  "nextPage": "Next page",
+  "invitationActions": "Invitation actions",
+  "addClientTitle": "Add client",
+  "addClientIntro": "We'll create a personal invitation link for them. No email is sent – you share the link yourself.",
+  "fullNameLabel": "Full name",
+  "cancel": "Cancel",
+  "createInvitation": "Create invitation",
+  "invitationLinkTitle": "Invitation link for {name}",
+  "@invitationLinkTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "invitationLinkOnce": "Copy the link now and send it to your client. You won't be able to see it again after closing this window.",
+  "invitationLinkExpires": "Valid until {date}.",
+  "@invitationLinkExpires": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "copyLink": "Copy link",
+  "linkCopied": "Copied",
+  "done": "Done",
+  "regenerateLink": "Regenerate link",
+  "regenerateConfirmTitle": "Regenerate the link?",
+  "regenerateConfirmBody": "The current link for {name} stops working and a new one, valid for 7 days, is created.",
+  "@regenerateConfirmBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "regenerate": "Regenerate",
+  "cancelInvitation": "Cancel invitation",
+  "cancelInvitationConfirmTitle": "Cancel the invitation?",
+  "cancelInvitationConfirmBody": "{name} won't be able to join with this link anymore.",
+  "@cancelInvitationConfirmBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "keepInvitation": "Keep it",
+  "invitationCancelled": "Invitation cancelled.",
+  "error_INVITE_NOT_PENDING": "This invitation is no longer pending.",
+  "error_INVITE_ALREADY_PENDING": "You already have a pending invitation for this email.",
+  "error_ALREADY_YOUR_CLIENT": "This person is already your client.",
+  "error_EMAIL_NOT_VERIFIED": "Confirm your email first."
 }

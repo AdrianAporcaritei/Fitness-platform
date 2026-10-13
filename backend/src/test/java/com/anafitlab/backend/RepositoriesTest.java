@@ -44,7 +44,6 @@ class RepositoriesTest extends IntegrationTestBase {
 		assertThat(users.existsByEmail("nobody@x.ro")).isFalse();
 		assertThat(users.existsByRole(Role.ADMIN)).isFalse();
 		assertThat(links.findCurrentByClientId(client.getId())).isPresent();
-		assertThat(links.findCurrentByCoachId(coach.getId())).hasSize(1);
 		assertThat(links.findCurrentByCoachIdAndClientId(coach.getId(), client.getId())).isPresent();
 	}
 
