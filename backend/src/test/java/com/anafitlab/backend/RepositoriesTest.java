@@ -10,16 +10,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.AppUserRepository;
-import com.anafitlab.backend.auth.RefreshToken;
-import com.anafitlab.backend.auth.RefreshTokenRepository;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
-import com.anafitlab.backend.client.CoachClientRepository;
-import com.anafitlab.backend.client.CoachProfile;
-import com.anafitlab.backend.client.CoachProfileRepository;
-import com.anafitlab.backend.client.RelationshipStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.RefreshToken;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.auth.repository.AppUserRepository;
+import com.anafitlab.backend.auth.repository.RefreshTokenRepository;
+import com.anafitlab.backend.client.entity.CoachProfile;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
+import com.anafitlab.backend.client.repository.CoachClientRepository;
+import com.anafitlab.backend.client.repository.CoachProfileRepository;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.TestFixtures;
 

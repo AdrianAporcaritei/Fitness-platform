@@ -6,18 +6,18 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.anafitlab.backend.auth.AccessTokenIssuer;
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.AppUserRepository;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.TokenHasher;
-import com.anafitlab.backend.auth.UserStatus;
-import com.anafitlab.backend.client.CoachClient;
-import com.anafitlab.backend.client.CoachClientRepository;
-import com.anafitlab.backend.client.CoachInvite;
-import com.anafitlab.backend.client.CoachInviteRepository;
-import com.anafitlab.backend.client.InviteStatus;
-import com.anafitlab.backend.client.RelationshipStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.auth.repository.AppUserRepository;
+import com.anafitlab.backend.auth.service.AccessTokenIssuer;
+import com.anafitlab.backend.auth.util.TokenHasher;
+import com.anafitlab.backend.client.entity.CoachClient;
+import com.anafitlab.backend.client.entity.CoachInvite;
+import com.anafitlab.backend.client.entity.InviteStatus;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
+import com.anafitlab.backend.client.repository.CoachClientRepository;
+import com.anafitlab.backend.client.repository.CoachInviteRepository;
 
 /** Repository-level helpers for tests. Inject it; it is registered by TestSupportConfig. */
 @Component

@@ -20,12 +20,11 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Locale;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.TestFixtures;
-
 
 class ErrorFormatTest extends IntegrationTestBase {
 

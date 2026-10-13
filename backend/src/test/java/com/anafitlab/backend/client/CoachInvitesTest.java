@@ -13,7 +13,6 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.UUID;
 
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -23,10 +22,15 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.TokenHasher;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.auth.util.TokenHasher;
+import com.anafitlab.backend.client.entity.CoachInvite;
+import com.anafitlab.backend.client.entity.InviteStatus;
+import com.anafitlab.backend.client.repository.CoachInviteRepository;
+import com.anafitlab.backend.client.service.InviteService;
+import com.anafitlab.backend.client.util.InviteCodes;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.MutableClock;

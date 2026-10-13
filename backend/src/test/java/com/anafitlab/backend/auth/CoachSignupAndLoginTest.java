@@ -28,6 +28,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
 import com.anafitlab.backend.common.mail.OutgoingEmail;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.MutableClock;

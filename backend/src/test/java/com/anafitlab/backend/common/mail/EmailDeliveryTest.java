@@ -9,10 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.anafitlab.backend.auth.AccountEmails;
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.auth.service.AccountEmails;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.RecordingEmailSender;
 import com.anafitlab.backend.support.TestFixtures;

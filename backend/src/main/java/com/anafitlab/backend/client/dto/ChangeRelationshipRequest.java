@@ -1,6 +1,6 @@
 package com.anafitlab.backend.client.dto;
 
-import com.anafitlab.backend.client.RelationshipStatus;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
 
 import jakarta.validation.constraints.NotNull;
 

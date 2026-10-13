@@ -16,7 +16,7 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import com.anafitlab.backend.auth.Role;
+import com.anafitlab.backend.auth.entity.Role;
 
 /** Lets controllers declare a {@link CurrentUser} parameter. */
 @Component

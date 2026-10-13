@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.support.StaticMessageSource;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.service.AccountEmails;
 import com.anafitlab.backend.common.AppProperties;
 import com.anafitlab.backend.common.mail.OutgoingEmail;
 

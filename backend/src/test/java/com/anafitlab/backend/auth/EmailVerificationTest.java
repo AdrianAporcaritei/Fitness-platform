@@ -24,6 +24,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
+import com.anafitlab.backend.auth.entity.ActionTokenPurpose;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.auth.repository.AppUserRepository;
+import com.anafitlab.backend.auth.service.ActionTokenService;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.MutableClock;
 import com.anafitlab.backend.support.RecordingEmailSender;
