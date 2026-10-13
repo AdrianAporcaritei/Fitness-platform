@@ -20,9 +20,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.client.entity.CoachClient;
+import com.anafitlab.backend.client.entity.CoachInvite;
+import com.anafitlab.backend.client.entity.InviteStatus;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import com.anafitlab.backend.support.MutableClock;
 import com.anafitlab.backend.support.TestFixtures;

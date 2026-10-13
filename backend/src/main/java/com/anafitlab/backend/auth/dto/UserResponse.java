@@ -2,9 +2,9 @@ package com.anafitlab.backend.auth.dto;
 
 import java.util.UUID;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
 
 public record UserResponse(UUID id, String email, Role role, UserStatus status, String firstName, String lastName,
 		String locale, String timezone) {

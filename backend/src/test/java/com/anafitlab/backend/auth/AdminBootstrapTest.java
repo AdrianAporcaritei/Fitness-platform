@@ -18,6 +18,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
+import com.anafitlab.backend.auth.config.AdminBootstrap;
+import com.anafitlab.backend.auth.config.AdminProperties;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.auth.repository.AppUserRepository;
 import com.anafitlab.backend.common.validation.PasswordValidator;
 import com.anafitlab.backend.support.IntegrationTestBase;
 import tools.jackson.databind.json.JsonMapper;

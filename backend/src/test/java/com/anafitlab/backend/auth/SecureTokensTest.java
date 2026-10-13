@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import com.anafitlab.backend.auth.util.SecureTokens;
+
 class SecureTokensTest {
 
 	@Test

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+import com.anafitlab.backend.auth.util.TokenHasher;
+
 class TokenHasherTest {
 
 	@Test

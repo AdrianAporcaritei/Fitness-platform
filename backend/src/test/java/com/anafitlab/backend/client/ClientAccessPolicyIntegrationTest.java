@@ -9,9 +9,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
+import com.anafitlab.backend.client.service.ClientAccessPolicy;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.common.security.CurrentUser;
 import com.anafitlab.backend.support.IntegrationTestBase;

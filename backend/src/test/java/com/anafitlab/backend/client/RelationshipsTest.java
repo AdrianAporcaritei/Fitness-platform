@@ -20,9 +20,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
-import com.anafitlab.backend.auth.AppUser;
-import com.anafitlab.backend.auth.Role;
-import com.anafitlab.backend.auth.UserStatus;
+import com.anafitlab.backend.auth.entity.AppUser;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.entity.UserStatus;
+import com.anafitlab.backend.client.entity.CoachProfile;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
+import com.anafitlab.backend.client.repository.CoachProfileRepository;
+import com.anafitlab.backend.client.service.RelationshipService;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.common.security.CurrentUser;
 import com.anafitlab.backend.support.IntegrationTestBase;

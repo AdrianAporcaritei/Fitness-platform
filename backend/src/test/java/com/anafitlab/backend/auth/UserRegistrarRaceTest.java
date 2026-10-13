@@ -11,6 +11,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.auth.repository.AppUserRepository;
+import com.anafitlab.backend.auth.service.NewUser;
+import com.anafitlab.backend.auth.service.UserRegistrar;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.support.IntegrationTestBase;
 

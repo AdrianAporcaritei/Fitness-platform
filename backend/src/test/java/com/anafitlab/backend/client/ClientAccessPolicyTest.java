@@ -14,7 +14,11 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 
-import com.anafitlab.backend.auth.Role;
+import com.anafitlab.backend.auth.entity.Role;
+import com.anafitlab.backend.client.entity.CoachClient;
+import com.anafitlab.backend.client.entity.RelationshipStatus;
+import com.anafitlab.backend.client.repository.CoachClientRepository;
+import com.anafitlab.backend.client.service.ClientAccessPolicy;
 import com.anafitlab.backend.common.error.ApiException;
 import com.anafitlab.backend.common.security.CurrentUser;
 

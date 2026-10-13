@@ -1,7 +1,7 @@
 package com.anafitlab.backend.auth.dto;
 
-import com.anafitlab.backend.auth.EmailNormalizer;
-import com.anafitlab.backend.auth.NewUser;
+import com.anafitlab.backend.auth.service.NewUser;
+import com.anafitlab.backend.auth.util.EmailNormalizer;
 import com.anafitlab.backend.common.validation.ValidLocale;
 import com.anafitlab.backend.common.validation.ValidPassword;
 import com.anafitlab.backend.common.validation.ValidTimezone;

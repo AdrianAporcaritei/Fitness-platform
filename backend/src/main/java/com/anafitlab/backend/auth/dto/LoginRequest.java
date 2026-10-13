@@ -1,6 +1,6 @@
 package com.anafitlab.backend.auth.dto;
 
-import com.anafitlab.backend.auth.EmailNormalizer;
+import com.anafitlab.backend.auth.util.EmailNormalizer;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
