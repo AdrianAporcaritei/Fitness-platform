@@ -17,11 +17,11 @@ import com.anafitlab.backend.common.security.CurrentUser;
 import jakarta.validation.Valid;
 
 @RestController
-class MeController {
+class AccountController {
 
 	private final AccountService accounts;
 
-	MeController(AccountService accounts) {
+	AccountController(AccountService accounts) {
 		this.accounts = accounts;
 	}
 
