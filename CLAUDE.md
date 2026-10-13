@@ -22,6 +22,19 @@ app/       Flutter app (organized by feature, not by layer)
 docs/      domain-model.md, api/openapi.yaml
 ```
 
+Inside each backend feature package, classes are grouped by layer:
+```
+<feature>/
+  controller/  REST controllers (DTOs only, no business logic)
+  service/     business logic, plus the small value records services pass around
+  repository/  Spring Data repositories and hand-written (JDBC) queries
+  entity/      JPA entities and the enums stored in their columns
+  dto/         request/response records and API-only enums
+  config/      @ConfigurationProperties and startup runners (only when needed)
+  util/        stateless helpers (only when needed)
+```
+`common/` holds cross-feature infrastructure (security, errors, mail, rate limiting, validation). Backend tests stay in the feature package (`<feature>/`), not per layer.
+
 ## Rules
 - `app/lib/core/api/generated/` and `app/lib/core/l10n/app_localizations*.dart` are generated and committed: never hand-edit or reformat them.
 - Schema changes ONLY through Flyway migrations (`backend/src/main/resources/db/migration`, `V<n>__description.sql`). `spring.jpa.hibernate.ddl-auto=validate`. Never edit an already-applied migration; add a new one.
